@@ -1548,6 +1548,13 @@ async function saveRawaccelSettingsToServer() {
     profile["Y/X output DPI ratio (vertical sens multiplier)"] = parseFloat(yxRatioAccelInput.value);
     profile["Degrees of rotation"] = parseFloat(rotationAccelInput.value);
     
+    // Map the UI Angle Snapping to RawAccel's kernel-level Angle Snapping degrees
+    const angleSnappingEl = document.getElementById('angle-snapping');
+    const snapThresholdEl = document.getElementById('snap-threshold');
+    const angleSnappingEnabled = angleSnappingEl && angleSnappingEl.checked;
+    const snapAngleVal = snapThresholdEl ? parseFloat(snapThresholdEl.value) : 15;
+    profile["Degrees of angle snapping"] = angleSnappingEnabled ? snapAngleVal : 0;
+    
     const params = profile["Whole or horizontal accel parameters"];
     params.mode = accelModeRawSelect.value;
     params["Gain / Velocity"] = chkGain.checked;
@@ -3120,6 +3127,11 @@ function saveSensorFiltersToStorage() {
         deadzoneDynamicFilter: document.getElementById('deadzone-dynamic-filter').checked
     };
     localStorage.setItem('GLAB_SENSOR_FILTERS', JSON.stringify(filters));
+    
+    // Automatically apply Angle Snapping/smoothing changes directly to RawAccel (elevated) so it works in games
+    if (typeof saveRawaccelSettingsToServer === 'function') {
+        saveRawaccelSettingsToServer();
+    }
 }
 
 function loadSensorFiltersFromStorage() {
