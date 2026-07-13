@@ -685,6 +685,19 @@ dpiSlider.addEventListener('change', async (e) => {
     await saveRawaccelSettingsToServer();
 });
 
+const physicalDpiInputEl = document.getElementById('physical-mouse-dpi');
+if (physicalDpiInputEl) {
+    const storedPhysicalDpi = localStorage.getItem('GLAB_PHYSICAL_DPI');
+    if (storedPhysicalDpi) {
+        physicalDpiInputEl.value = storedPhysicalDpi;
+    }
+    physicalDpiInputEl.addEventListener('change', async () => {
+        localStorage.setItem('GLAB_PHYSICAL_DPI', physicalDpiInputEl.value);
+        await saveRawaccelSettingsToServer();
+    });
+}
+
+
 document.querySelectorAll('input[name="rgb-mode"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
         mouseSettings.rgbMode = parseInt(e.target.value);
@@ -1493,8 +1506,29 @@ async function saveRawaccelSettingsToServer() {
     const activeDpiVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value * 200;
     const extraMultiplier = parseFloat(sensMultiInput.value) || 1.0;
     
-    // Always normalize to 1000 DPI baseline to ensure RawAccel scales speed proportionally with the DPI slider
-    rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = 1000;
+    // Read the physical base DPI of the user's mouse
+    const physicalDpiInput = document.getElementById('physical-mouse-dpi');
+    let physicalDpi = physicalDpiInput ? parseInt(physicalDpiInput.value) : 1000;
+    if (isNaN(physicalDpi) || physicalDpi <= 0) physicalDpi = 1000;
+    
+    // Set the normalizer to the physical DPI baseline to ensure RawAccel scales speed proportionally
+    rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = physicalDpi;
+    
+    // Wait, if the mouse is an ATK mouse and we JUST sent a hardware DPI change, the physical DPI is NOW the activeDpiVal!
+    // If the hardware change succeeded, the mouse physically changed its DPI to `activeDpiVal`.
+    // If we scale it again in RawAccel, we get double scaling!
+    // So if the hardware is an ATK mouse, we assume the physical DPI equals the activeDpiVal.
+    const nameUpper = (hidDevice?.productName || "").toUpperCase();
+    const isAtkMouse = hidDevice && (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
+                                     hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
+                                     nameUpper.includes("ATK") || nameUpper.includes("VXE"));
+                                     
+    if (isAtkMouse) {
+        // The hardware write worked (or we assume it worked), so the mouse physically is at activeDpiVal.
+        // We set the normalizer to activeDpiVal so that the RawAccel multiplier becomes 1.0 (no scaling).
+        rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = activeDpiVal;
+    }
+
     profile["Output DPI"] = Math.round(activeDpiVal * extraMultiplier);
     
     profile["Y/X output DPI ratio (vertical sens multiplier)"] = parseFloat(yxRatioAccelInput.value);
