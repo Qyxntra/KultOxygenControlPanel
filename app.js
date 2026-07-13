@@ -89,7 +89,7 @@ async function checkTauriUpdate() {
                     } catch (err) {
                         installBtn.disabled = false;
                         installBtn.textContent = "INSTALLER LA MAJ";
-                        alert("Erreur de mise à jour: " + err.message);
+                        alert("Erreur de mise à jour: " + (err && err.message ? err.message : JSON.stringify(err) || err));
                     }
                 });
             }
