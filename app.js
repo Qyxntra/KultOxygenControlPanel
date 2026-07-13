@@ -1156,8 +1156,8 @@ function parseLutPoints() {
 
 function populateRawaccelUI(settings) {
     const profile = settings.profiles[0];
-    
-    sensMultiInput.value = profile["Output DPI"] ? (profile["Output DPI"] / 1000).toFixed(2) : "1.00";
+    const normalizer = (settings.defaultDeviceConfig && settings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"]) || 1000;
+    sensMultiInput.value = profile["Output DPI"] ? (profile["Output DPI"] / normalizer).toFixed(2) : "1.00";
     yxRatioAccelInput.value = profile["Y/X output DPI ratio (vertical sens multiplier)"] || "1.00";
     rotationAccelInput.value = profile["Degrees of rotation"] || "0";
     
