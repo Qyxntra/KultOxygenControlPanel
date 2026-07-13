@@ -9,7 +9,7 @@ const mouseSettings = {
     dpiProfiles: [
         { value: 4, enabled: true },  // 800 DPI
         { value: 8, enabled: true },  // 1600 DPI
-        { value: 24, enabled: true }, // 4800 DPI
+        { value: 12, enabled: true }, // 2400 DPI
         { value: 64, enabled: true }  // 12800 DPI
     ],
     rgbMode: 16,
@@ -655,6 +655,8 @@ document.querySelectorAll('input[name="active-dpi"]').forEach(radio => {
         if (isAtkMouse) {
             const activeDpiVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value * 200;
             await sendAtkDpi(activeDpiVal);
+        } else if (hidDevice) {
+            await sendGlabActiveDpi();
         }
         await saveRawaccelSettingsToServer();
     });
@@ -681,6 +683,8 @@ dpiSlider.addEventListener('change', async (e) => {
                                      nameUpper.includes("ATK") || nameUpper.includes("VXE"));
     if (isAtkMouse) {
         await sendAtkDpi(val * 200);
+    } else if (hidDevice) {
+        await sendGlabActiveDpi();
     }
     await saveRawaccelSettingsToServer();
 });
@@ -922,6 +926,24 @@ async function sendAtkDpi(dpiValue) {
                 console.error("ATK HID transmission failed completely:", e3);
             }
         }
+    }
+}
+
+async function sendGlabActiveDpi() {
+    if (!hidDevice) return;
+    try {
+        const i = mouseSettings.activeDpi;
+        const profile = mouseSettings.dpiProfiles[i];
+        const profileBits = 0x08 + i;
+        const dataVal = (profile.value << 4) | profileBits;
+        let enabledDpiBit = 0;
+        for (let j = 0; j < 4; j++) {
+            if (mouseSettings.dpiProfiles[j].enabled) enabledDpiBit |= (1 << j);
+        }
+        await sendMouseReport(0x09, mouseSettings.activeDpi, dataVal, enabledDpiBit);
+        console.log(`G-LAB HID ActiveDpi sent: index ${i}, value ${profile.value * 200}`);
+    } catch (err) {
+        console.error("Failed to send G-LAB Active DPI:", err);
     }
 }
 
@@ -1514,18 +1536,10 @@ async function saveRawaccelSettingsToServer() {
     // Set the normalizer to the physical DPI baseline to ensure RawAccel scales speed proportionally
     rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = physicalDpi;
     
-    // Wait, if the mouse is an ATK mouse and we JUST sent a hardware DPI change, the physical DPI is NOW the activeDpiVal!
-    // If the hardware change succeeded, the mouse physically changed its DPI to `activeDpiVal`.
-    // If we scale it again in RawAccel, we get double scaling!
-    // So if the hardware is an ATK mouse, we assume the physical DPI equals the activeDpiVal.
-    const nameUpper = (hidDevice?.productName || "").toUpperCase();
-    const isAtkMouse = hidDevice && (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
-                                     hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
-                                     nameUpper.includes("ATK") || nameUpper.includes("VXE"));
-                                     
-    if (isAtkMouse) {
-        // The hardware write worked (or we assume it worked), so the mouse physically is at activeDpiVal.
-        // We set the normalizer to activeDpiVal so that the RawAccel multiplier becomes 1.0 (no scaling).
+    // If a programmable HID device is connected (ATK/VXE or G-LAB), the DPI is set directly in hardware.
+    // We assume the hardware change succeeded and the mouse is physically at activeDpiVal.
+    // Setting the RawAccel normalizer to activeDpiVal prevents double scaling (multiplier becomes 1.0).
+    if (hidDevice) {
         rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = activeDpiVal;
     }
 
@@ -1593,7 +1607,7 @@ globalResetBtn.addEventListener('click', () => {
             mouseSettings.activeDpi = 0;
             mouseSettings.dpiProfiles[0].value = 4;
             mouseSettings.dpiProfiles[1].value = 8;
-            mouseSettings.dpiProfiles[2].value = 24;
+            mouseSettings.dpiProfiles[2].value = 12;
             mouseSettings.dpiProfiles[3].value = 64;
             document.querySelector(`input[name="active-dpi"][value="0"]`).checked = true;
             updateDpiUI();
@@ -2075,7 +2089,7 @@ function loadProfileFromStorage(name) {
             mouseSettings.activeDpi = 0;
             mouseSettings.dpiProfiles[0].value = 4;
             mouseSettings.dpiProfiles[1].value = 8;
-            mouseSettings.dpiProfiles[2].value = 24;
+            mouseSettings.dpiProfiles[2].value = 12;
             mouseSettings.dpiProfiles[3].value = 64;
         } else if (name === 'fps') {
             mouseSettings.activeDpi = 1;
