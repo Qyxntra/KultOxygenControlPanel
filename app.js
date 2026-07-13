@@ -2262,15 +2262,11 @@ function resizeSensorCanvas() {
     }
 }
 
+let sensorLoopId;
 function drawSensorMonitor() {
-    if (document.hidden || activeTab !== 'tab-sensor-filters') {
-        requestAnimationFrame(drawSensorMonitor);
-        return;
-    }
-    if (!sensorCanvas || !sensorCtx) {
-        requestAnimationFrame(drawSensorMonitor);
-        return;
-    }
+    if (typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(sensorLoopId);
+    if (document.hidden || activeTab !== 'tab-sensor-filters') return;
+    if (!sensorCanvas || !sensorCtx) return;
     
     const w = sensorCanvas.width / window.devicePixelRatio;
     const h = sensorCanvas.height / window.devicePixelRatio;
@@ -2345,7 +2341,7 @@ function drawSensorMonitor() {
         sensorCtx.fill();
     }
     
-    requestAnimationFrame(drawSensorMonitor);
+    sensorLoopId = requestAnimationFrame(drawSensorMonitor);
 }
 
 if (sensorCanvas) {
@@ -2933,15 +2929,11 @@ function resizeDashCanvas() {
     }
 }
 
+let dashLoopId;
 function drawDashboardChart() {
-    if (document.hidden || activeTab !== 'tab-dashboard') {
-        requestAnimationFrame(drawDashboardChart);
-        return;
-    }
-    if (!dashCanvas || !dashCtx) {
-        requestAnimationFrame(drawDashboardChart);
-        return;
-    }
+    if (typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(dashLoopId);
+    if (document.hidden || activeTab !== 'tab-dashboard') return;
+    if (!dashCanvas || !dashCtx) return;
     
     const w = dashCanvas.width / window.devicePixelRatio;
     const h = dashCanvas.height / window.devicePixelRatio;
@@ -3003,7 +2995,7 @@ function drawDashboardChart() {
         dashCtx.shadowBlur = 0; // reset
     }
     
-    requestAnimationFrame(drawDashboardChart);
+    dashLoopId = requestAnimationFrame(drawDashboardChart);
 }
 
 function showChartTooltip(e) {
@@ -3624,5 +3616,53 @@ if (btnCloseConnModal) {
         if (modal) modal.style.display = 'none';
     });
 }
+
+// ---------------------------------------------------------
+// V0.2.7 OPTIMIZATIONS : Zéro CPU en arrière-plan & Sauvegarde Automatique
+// ---------------------------------------------------------
+
+// Relancer les boucles quand l'onglet redevient actif
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        if (activeTab === 'tab-sensor-filters') drawSensorMonitor();
+        if (activeTab === 'tab-dashboard') drawDashboardChart();
+        if (activeTab === 'tab-rawaccel') drawRawaccelChart();
+    }
+});
+
+// Sauvegarde automatique et silencieuse sur tous les champs
+let autoSaveTimeout;
+document.addEventListener('input', (e) => {
+    const isControl = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT';
+    if (!isControl) return;
+    
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(() => {
+        if (activeTab === 'tab-rawaccel') {
+            if (typeof saveRawaccelSettingsToServer === 'function') saveRawaccelSettingsToServer();
+        } else if (activeTab === 'tab-sensor-filters') {
+            if (typeof saveSensorFiltersToStorage === 'function') saveSensorFiltersToStorage();
+        } else {
+            if (typeof saveMouseSettingsToDevice === 'function') saveMouseSettingsToDevice();
+        }
+    }, 400); // Débounce de 400ms pour éviter de spammer lors du drag d'un slider
+});
+
+document.addEventListener('change', (e) => {
+    const isControl = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.type === 'checkbox';
+    if (!isControl) return;
+    
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(() => {
+        if (activeTab === 'tab-rawaccel') {
+            if (typeof saveRawaccelSettingsToServer === 'function') saveRawaccelSettingsToServer();
+        } else if (activeTab === 'tab-sensor-filters') {
+            if (typeof saveSensorFiltersToStorage === 'function') saveSensorFiltersToStorage();
+        } else {
+            if (typeof saveMouseSettingsToDevice === 'function') saveMouseSettingsToDevice();
+        }
+    }, 100);
+});
+
 
 
