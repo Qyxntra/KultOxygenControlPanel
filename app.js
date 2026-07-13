@@ -1488,8 +1488,17 @@ async function saveRawaccelSettingsToServer() {
     
     const tStart = performance.now();
     const profile = rawaccelSettings.profiles[0];
+    const activeDpiVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value * 200;
+    const extraMultiplier = parseFloat(sensMultiInput.value) || 1.0;
     
-    profile["Output DPI"] = parseFloat(sensMultiInput.value) * 1000;
+    if (hidDevice) {
+        rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = activeDpiVal;
+        profile["Output DPI"] = Math.round(activeDpiVal * extraMultiplier);
+    } else {
+        rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = 1000;
+        profile["Output DPI"] = Math.round(activeDpiVal * extraMultiplier);
+    }
+    
     profile["Y/X output DPI ratio (vertical sens multiplier)"] = parseFloat(yxRatioAccelInput.value);
     profile["Degrees of rotation"] = parseFloat(rotationAccelInput.value);
     
