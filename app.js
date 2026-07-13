@@ -331,6 +331,10 @@ async function adaptToDevice(device) {
             hasRgb = false;
             maxDpi = 2400;
             buttonCount = 3;
+        } else if (nameUpper.includes("ATK") || nameUpper.includes("VXE") || nameUpper.includes("COMPX")) {
+            hasRgb = false; // Most ATK/VXE gaming mice do not have RGB (or only an indicator LED) to save weight
+            maxDpi = nameUpper.includes("ULTIMATE") ? 42000 : 30000;
+            buttonCount = 6;
         } else if (nameUpper.includes("G-LAB") || nameUpper.includes("KULT") || nameUpper.includes("OXYGEN")) {
             maxDpi = 12800;
             buttonCount = 7;
@@ -781,11 +785,63 @@ async function sendMouseReport(updateType, forComponent, data, enabledDpiProfile
     }
 }
 
+async function saveAtkSettingsToDevice() {
+    if (!hidDevice) return;
+    const tStart = performance.now();
+    try {
+        const payload = new Uint8Array(64);
+        payload[0] = 35;  // Data valid length
+        payload[1] = 128; // setData
+        payload[2] = 3;   // controlDpi command ID
+        
+        payload[6] = mouseSettings.activeDpi;
+        payload[7] = 4;   // Max level profiles count
+        
+        for (let i = 0; i < 4; i++) {
+            const profile = mouseSettings.dpiProfiles[i];
+            const dpiVal = profile.value * 200; // Recalculate slider index back to raw DPI
+            
+            // X DPI values start at offset 8
+            const xOffset = 8 + 2 * i;
+            payload[xOffset] = dpiVal & 0xFF;
+            payload[xOffset + 1] = (dpiVal >> 8) & 0xFF;
+            
+            // Y DPI values start at offset 24
+            const yOffset = 24 + 2 * i;
+            payload[yOffset] = dpiVal & 0xFF;
+            payload[yOffset + 1] = (dpiVal >> 8) & 0xFF;
+        }
+        
+        // Checksum calculation (PDt.sum([8, ...e.slice(0, 15)]))
+        let sum = 8;
+        for (let i = 0; i < 15; i++) {
+            sum += payload[i];
+        }
+        payload[15] = (85 - (sum & 255)) & 255;
+        
+        // Send ATK settings via report ID = 2
+        await hidDevice.sendFeatureReport(2, payload);
+        
+        const delay = Math.round(performance.now() - tStart);
+        telemetryDelay.textContent = `${delay} ms`;
+        showTelemetryToast("Configuration souris ATK enregistrée");
+    } catch (err) {
+        alert("Erreur d'application ATK : " + err.message);
+    }
+}
+
 async function saveMouseSettingsToDevice() {
     if (!hidDevice) {
         alert("Périphérique déconnecté. Veuillez cliquer sur 'Initialiser WebHID' pour vous connecter.");
         return;
     }
+    
+    const nameUpper = detectedMouseLimits.name.toUpperCase();
+    if (nameUpper.includes("ATK") || nameUpper.includes("VXE") || nameUpper.includes("COMPX")) {
+        await saveAtkSettingsToDevice();
+        return;
+    }
+    
     const tStart = performance.now();
     try {
         await sendMouseReport(0x13, 0x7f, mouseSettings.rgbMode);
