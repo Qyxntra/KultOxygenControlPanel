@@ -280,13 +280,44 @@ function adjustSvgBlueprint(count) {
     if (dpiM) dpiM.style.display = count >= 7 ? 'block' : 'none';
 }
 
+function triggerTabSwitch(tabId) {
+    const btn = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+    if (btn) {
+        btn.click();
+    }
+}
+
 function adaptToDevice(device) {
     const productName = device.productName || "Souris Gaming Universelle";
     let maxDpi = 3200;
     let buttonCount = 5;
+    let hasRgb = true;
     
     const nameUpper = productName.toUpperCase();
-    if (nameUpper.includes("G-LAB") || nameUpper.includes("KULT") || nameUpper.includes("OXYGEN")) {
+    if (
+        nameUpper.includes("OFFICE") ||
+        nameUpper.includes("DESKTOP") ||
+        nameUpper.includes("BUSINESS") ||
+        nameUpper.includes("BASIC") ||
+        nameUpper.includes("STANDARD") ||
+        nameUpper.includes("HP") ||
+        nameUpper.includes("DELL") ||
+        nameUpper.includes("LENOVO") ||
+        nameUpper.includes("APPLE") ||
+        nameUpper.includes("MAGIC MOUSE") ||
+        nameUpper.includes("TRACKPAD") ||
+        nameUpper.includes("SILENT") ||
+        nameUpper.includes("M185") ||
+        nameUpper.includes("M220") ||
+        nameUpper.includes("M330") ||
+        nameUpper.includes("M705") ||
+        nameUpper.includes("MX MASTER") ||
+        nameUpper.includes("MX ANYWHERE")
+    ) {
+        hasRgb = false;
+        maxDpi = 2400;
+        buttonCount = 3;
+    } else if (nameUpper.includes("G-LAB") || nameUpper.includes("KULT") || nameUpper.includes("OXYGEN")) {
         maxDpi = 12800;
         buttonCount = 7;
     } else if (nameUpper.includes("LOGITECH") || nameUpper.includes("G502") || nameUpper.includes("G305") || nameUpper.includes("HERO")) {
@@ -331,7 +362,20 @@ function adaptToDevice(device) {
     // Adjust SVG Blueprint visible layers
     adjustSvgBlueprint(buttonCount);
     
-    showTelemetryToast(`Profil détecté : ${productName}`);
+    // Hide/Show RGB tab
+    const rgbTabButton = document.querySelector('.nav-tab[data-tab="tab-rgb"]');
+    if (rgbTabButton) {
+        if (hasRgb) {
+            rgbTabButton.style.display = 'flex';
+        } else {
+            rgbTabButton.style.display = 'none';
+            if (activeTab === 'tab-rgb') {
+                triggerTabSwitch('tab-dashboard');
+            }
+        }
+    }
+    
+    showTelemetryToast(`Profil détecté : ${productName} (${hasRgb ? 'RGB Actif' : 'Sans RGB'})`);
 }
 
 function revertToDefaultDevice() {
@@ -347,6 +391,11 @@ function revertToDefaultDevice() {
     document.getElementById('dpi-mid-label').textContent = '6400 DPI';
     document.getElementById('dpi-max-label').textContent = '12800 DPI';
     document.getElementById('dpi-sensor-desc').textContent = 'Configurez les pas du capteur. L\'Instant A704 supporte 64 pas physiques de 200 DPI chacun.';
+    
+    const rgbTabButton = document.querySelector('.nav-tab[data-tab="tab-rgb"]');
+    if (rgbTabButton) {
+        rgbTabButton.style.display = 'flex'; // Restore default gaming mouse tab
+    }
     
     rebuildButtonMappingUI(7);
     adjustSvgBlueprint(7);
