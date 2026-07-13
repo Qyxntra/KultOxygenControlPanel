@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "notes": "Mise à jour : Intégration native de RawAccel par backend Rust, correction du dimensionnement du visualiseur de signal, note sur la stabilité des courbes, et lissage sensoriel (Smoothing) paramétrable.",
+  "pub_date": "2026-07-13T12:12:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSMW5vVmh0WE9HT3lkSVhNakhsekNnVmI1QVpzZTRjWGNXR29GNGhZdFBsNHIzUUg4c0FFTm9tN0Z1em1vVC85d05jUUUxQ0NQRGVHSjJKcFZrUm1mRE1jYUZmMkFTVndnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgzOTM3NTQ5CWZpbGU6S3VsdE94eWdlbkNvbnRyb2xQYW5lbF8wLjEuMF94NjQtc2V0dXAuZXhlCldaNUkwczZIZXBPaFVxekZtU2trUE9YS3RZTnE1UEM4eVZSZ05jU3JlSFgrTEVsaWF6THNyQnAwWHNTN3Y4MW5FYkJ0TWEwT3oyYytRSjM5cUYvM0RBPT0K",
+      "url": "https://github.com/Qyxntra/KultOxygenControlPanel/releases/download/v0.1.0/KultOxygenControlPanel_0.1.0_x64-setup.nsis.zip"
+    }
+  }
+}
