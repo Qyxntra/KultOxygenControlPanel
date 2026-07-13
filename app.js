@@ -658,7 +658,6 @@ document.querySelectorAll('input[name="active-dpi"]').forEach(radio => {
         } else if (hidDevice) {
             await sendGlabActiveDpi();
         }
-        await saveRawaccelSettingsToServer();
     });
 });
 
@@ -686,7 +685,6 @@ dpiSlider.addEventListener('change', async (e) => {
     } else if (hidDevice) {
         await sendGlabActiveDpi();
     }
-    await saveRawaccelSettingsToServer();
 });
 
 const physicalDpiInputEl = document.getElementById('physical-mouse-dpi');
@@ -697,7 +695,6 @@ if (physicalDpiInputEl) {
     }
     physicalDpiInputEl.addEventListener('change', async () => {
         localStorage.setItem('GLAB_PHYSICAL_DPI', physicalDpiInputEl.value);
-        await saveRawaccelSettingsToServer();
     });
 }
 
@@ -3139,11 +3136,6 @@ function saveSensorFiltersToStorage() {
         deadzoneDynamicFilter: document.getElementById('deadzone-dynamic-filter').checked
     };
     localStorage.setItem('GLAB_SENSOR_FILTERS', JSON.stringify(filters));
-    
-    // Automatically apply Angle Snapping/smoothing changes directly to RawAccel (elevated) so it works in games
-    if (typeof saveRawaccelSettingsToServer === 'function') {
-        saveRawaccelSettingsToServer();
-    }
 }
 
 function loadSensorFiltersFromStorage() {
