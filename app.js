@@ -625,7 +625,17 @@ function updateDpiUI() {
 }
 
 document.querySelectorAll('input[name="active-dpi"]').forEach(radio => {
-    radio.addEventListener('change', updateDpiUI);
+    radio.addEventListener('change', () => {
+        updateDpiUI();
+        const nameUpper = (hidDevice?.productName || "").toUpperCase();
+        const isAtkMouse = hidDevice && (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
+                                         hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
+                                         nameUpper.includes("ATK") || nameUpper.includes("VXE"));
+        if (isAtkMouse) {
+            const activeDpiVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value * 200;
+            sendAtkDpi(activeDpiVal);
+        }
+    });
 });
 
 document.querySelectorAll('.custom-checkbox input').forEach((checkbox, idx) => {
@@ -639,6 +649,17 @@ dpiSlider.addEventListener('input', (e) => {
     const val = parseInt(e.target.value);
     mouseSettings.dpiProfiles[mouseSettings.activeDpi].value = val;
     updateDpiUI();
+});
+
+dpiSlider.addEventListener('change', (e) => {
+    const nameUpper = (hidDevice?.productName || "").toUpperCase();
+    const isAtkMouse = hidDevice && (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
+                                     hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
+                                     nameUpper.includes("ATK") || nameUpper.includes("VXE"));
+    if (isAtkMouse) {
+        const val = parseInt(e.target.value);
+        sendAtkDpi(val * 200);
+    }
 });
 
 document.querySelectorAll('input[name="rgb-mode"]').forEach(radio => {
@@ -827,26 +848,43 @@ async function sendMouseReport(updateType, forComponent, data, enabledDpiProfile
 async function sendAtkDpi(dpiValue) {
     if (!hidDevice) return;
     try {
-        const packet = new Uint8Array(8);
-        packet[0] = 0x26; // SetDpiValue command (38)
-        packet[1] = 0x00; // Profile 0
-        packet[2] = dpiValue & 0xFF;
-        packet[3] = (dpiValue >> 8) & 0xFF;
+        const packet = new Uint8Array(64);
+        packet[0] = 0x03; // sequence prefix
+        packet[1] = 0x00;
+        packet[2] = 0x26; // SetDpiValue command (38)
+        packet[3] = 0x00; // Profile ID
+        packet[4] = dpiValue & 0xFF;
+        packet[5] = (dpiValue >> 8) & 0xFF;
         
-        await hidDevice.sendReport(0x02, packet);
-        console.log(`ATK HID SetDpiValue sent to report 0x02: ${dpiValue}`);
+        await hidDevice.sendFeatureReport(0x02, packet);
+        console.log(`ATK HID SetDpiValue sent via sendFeatureReport on 0x02: ${dpiValue}`);
     } catch (err) {
-        console.warn("Failed to write ATK WebHID report 0x02, trying report 0x01...", err);
+        console.warn("Failed to write ATK Feature Report 0x02, trying report 0x03...", err);
         try {
-            const packet = new Uint8Array(8);
-            packet[0] = 0x26;
+            const packet = new Uint8Array(64);
+            packet[0] = 0x03;
             packet[1] = 0x00;
-            packet[2] = dpiValue & 0xFF;
-            packet[3] = (dpiValue >> 8) & 0xFF;
-            await hidDevice.sendReport(0x01, packet);
-            console.log(`ATK HID SetDpiValue sent to report 0x01: ${dpiValue}`);
+            packet[2] = 0x26;
+            packet[3] = 0x00;
+            packet[4] = dpiValue & 0xFF;
+            packet[5] = (dpiValue >> 8) & 0xFF;
+            await hidDevice.sendFeatureReport(0x03, packet);
+            console.log(`ATK HID SetDpiValue sent via sendFeatureReport on 0x03: ${dpiValue}`);
         } catch (e2) {
-            console.error("ATK HID transmission failed completely:", e2);
+            console.warn("Failed 0x03, trying report 0x01 output report...", e2);
+            try {
+                const packet = new Uint8Array(64);
+                packet[0] = 0x03;
+                packet[1] = 0x00;
+                packet[2] = 0x26;
+                packet[3] = 0x00;
+                packet[4] = dpiValue & 0xFF;
+                packet[5] = (dpiValue >> 8) & 0xFF;
+                await hidDevice.sendReport(0x01, packet);
+                console.log(`ATK HID SetDpiValue sent via sendReport on 0x01: ${dpiValue}`);
+            } catch (e3) {
+                console.error("ATK HID transmission failed completely:", e3);
+            }
         }
     }
 }
