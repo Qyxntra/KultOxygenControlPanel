@@ -287,55 +287,69 @@ function triggerTabSwitch(tabId) {
     }
 }
 
-function adaptToDevice(device) {
+async function adaptToDevice(device) {
     const productName = device.productName || "Souris Gaming Universelle";
     let maxDpi = 3200;
     let buttonCount = 5;
     let hasRgb = true;
     
-    const nameUpper = productName.toUpperCase();
-    if (
-        nameUpper.includes("OFFICE") ||
-        nameUpper.includes("DESKTOP") ||
-        nameUpper.includes("BUSINESS") ||
-        nameUpper.includes("BASIC") ||
-        nameUpper.includes("STANDARD") ||
-        nameUpper.includes("HP") ||
-        nameUpper.includes("DELL") ||
-        nameUpper.includes("LENOVO") ||
-        nameUpper.includes("APPLE") ||
-        nameUpper.includes("MAGIC MOUSE") ||
-        nameUpper.includes("TRACKPAD") ||
-        nameUpper.includes("SILENT") ||
-        nameUpper.includes("M185") ||
-        nameUpper.includes("M220") ||
-        nameUpper.includes("M330") ||
-        nameUpper.includes("M705") ||
-        nameUpper.includes("MX MASTER") ||
-        nameUpper.includes("MX ANYWHERE")
-    ) {
-        hasRgb = false;
-        maxDpi = 2400;
-        buttonCount = 3;
-    } else if (nameUpper.includes("G-LAB") || nameUpper.includes("KULT") || nameUpper.includes("OXYGEN")) {
-        maxDpi = 12800;
-        buttonCount = 7;
-    } else if (nameUpper.includes("LOGITECH") || nameUpper.includes("G502") || nameUpper.includes("G305") || nameUpper.includes("HERO")) {
-        maxDpi = 25600;
-        buttonCount = 11;
-    } else if (nameUpper.includes("RAZER") || nameUpper.includes("DEATHADDER") || nameUpper.includes("BASILISK") || nameUpper.includes("VIPER")) {
-        maxDpi = 20000;
-        buttonCount = 8;
-    } else if (nameUpper.includes("CORSAIR") || nameUpper.includes("M65") || nameUpper.includes("SABRE")) {
-        maxDpi = 18000;
-        buttonCount = 8;
-    } else if (nameUpper.includes("STEELSERIES") || nameUpper.includes("RIVAL") || nameUpper.includes("AEROX")) {
-        maxDpi = 18000;
-        buttonCount = 6;
-    } else {
-        // Generic gaming mouse profile
-        maxDpi = 16000;
-        buttonCount = 6;
+    showTelemetryToast(`Recherche des spécifications en ligne pour : ${productName}...`);
+    
+    try {
+        if (window.__TAURI__) {
+            const specs = await window.__TAURI__.core.invoke('fetch_mouse_specs_from_web', { productName });
+            if (specs && specs.max_dpi) {
+                maxDpi = specs.max_dpi;
+                buttonCount = specs.button_count;
+                hasRgb = specs.has_rgb;
+                console.log("Specs crawled successfully:", specs);
+            }
+        }
+    } catch (err) {
+        console.error("Web crawler failed, falling back to offline heuristics:", err);
+        const nameUpper = productName.toUpperCase();
+        if (
+            nameUpper.includes("OFFICE") ||
+            nameUpper.includes("DESKTOP") ||
+            nameUpper.includes("BUSINESS") ||
+            nameUpper.includes("BASIC") ||
+            nameUpper.includes("STANDARD") ||
+            nameUpper.includes("HP") ||
+            nameUpper.includes("DELL") ||
+            nameUpper.includes("LENOVO") ||
+            nameUpper.includes("APPLE") ||
+            nameUpper.includes("MAGIC MOUSE") ||
+            nameUpper.includes("TRACKPAD") ||
+            nameUpper.includes("SILENT") ||
+            nameUpper.includes("M185") ||
+            nameUpper.includes("M220") ||
+            nameUpper.includes("M330") ||
+            nameUpper.includes("M705") ||
+            nameUpper.includes("MX MASTER") ||
+            nameUpper.includes("MX ANYWHERE")
+        ) {
+            hasRgb = false;
+            maxDpi = 2400;
+            buttonCount = 3;
+        } else if (nameUpper.includes("G-LAB") || nameUpper.includes("KULT") || nameUpper.includes("OXYGEN")) {
+            maxDpi = 12800;
+            buttonCount = 7;
+        } else if (nameUpper.includes("LOGITECH") || nameUpper.includes("G502") || nameUpper.includes("G305") || nameUpper.includes("HERO")) {
+            maxDpi = 25600;
+            buttonCount = 11;
+        } else if (nameUpper.includes("RAZER") || nameUpper.includes("DEATHADDER") || nameUpper.includes("BASILISK") || nameUpper.includes("VIPER")) {
+            maxDpi = 20000;
+            buttonCount = 8;
+        } else if (nameUpper.includes("CORSAIR") || nameUpper.includes("M65") || nameUpper.includes("SABRE")) {
+            maxDpi = 18000;
+            buttonCount = 8;
+        } else if (nameUpper.includes("STEELSERIES") || nameUpper.includes("RIVAL") || nameUpper.includes("AEROX")) {
+            maxDpi = 18000;
+            buttonCount = 6;
+        } else {
+            maxDpi = 16000;
+            buttonCount = 6;
+        }
     }
     
     detectedMouseLimits = {
@@ -375,7 +389,7 @@ function adaptToDevice(device) {
         }
     }
     
-    showTelemetryToast(`Profil détecté : ${productName} (${hasRgb ? 'RGB Actif' : 'Sans RGB'})`);
+    showTelemetryToast(`Profil détecté : ${productName} (${hasRgb ? 'RGB Actif' : 'Sans RGB'}, Max DPI : ${maxDpi})`);
 }
 
 function revertToDefaultDevice() {
