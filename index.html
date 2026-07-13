@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE G-LAB UNIFIED SYSTEM CONTROL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="app-container">
+        
+        <!-- Native-Style Custom Title Bar (Tauri compatible) -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-brand">THE G-LAB</span>
+                <span class="logo-divider"></span>
+                <span class="logo-model">UNIFIED CONTROL PANEL</span>
+            </div>
+            
+            <div class="header-center">
+                <span class="status-badge disconnected" id="device-status">
+                    <span class="status-dot"></span>
+                    <span id="status-text">PÉRIPHÉRIQUE DÉCONNECTÉ</span>
+                </span>
+            </div>
+
+        </header>
+
+        <!-- In-app Update Notification Banner -->
+        <div id="update-banner" class="update-banner" style="display: none;">
+            <div class="update-banner-content">
+                <svg class="update-banner-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="currentColor"/></svg>
+                <span>Une nouvelle version est ready to use !</span>
+            </div>
+            <button id="btn-install-update" class="update-banner-btn">Installer la MAJ</button>
+        </div>
+
+        <!-- Main Workspace Shell -->
+        <div class="app-workspace">
+            
+            <!-- Unified Sidebar Navigation -->
+            <aside class="app-sidebar" id="app-sidebar">
+                <!-- Search bar -->
+                <div class="sidebar-search-container">
+                    <input type="text" id="sidebar-search" placeholder="Rechercher..." class="sidebar-search-input">
+                    <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/></svg>
+                </div>
+
+                <div class="sidebar-scroll-container" style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding-right: 4px; margin-bottom: 12px; scrollbar-width: thin;">
+                    <div class="nav-section">
+                        <div class="section-label">Général</div>
+                        <nav class="nav-group">
+                            <button class="nav-tab active" data-tab="tab-dashboard">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/></svg>
+                                Tableau de Bord
+                            </button>
+                            <button class="nav-tab" data-tab="tab-customization">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/></svg>
+                                Style & Theme
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="section-label">Matériel G-LAB</div>
+                        <nav class="nav-group">
+                            <button class="nav-tab" data-tab="tab-dpi">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+                                Sensibilité (DPI)
+                            </button>
+                            <button class="nav-tab" data-tab="tab-rgb">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.12 19.58 10.5 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+                                Éclairage (RGB)
+                            </button>
+                            <button class="nav-tab" data-tab="tab-buttons">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-9 16H9v-2h2v2zm0-4H9v-2h2v2zm0-4H9V8h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V8h2v2z"/></svg>
+                                Assignation Boutons
+                            </button>
+                            <button class="nav-tab" data-tab="tab-advanced">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                                Fonctions Système
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="section-label">Accélération Noyau</div>
+                        <nav class="nav-group">
+                            <button class="nav-tab rawaccel-tab" data-tab="tab-rawaccel">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M13.5 2c-5.24 0-9.5 4.26-9.5 9.5s4.26 9.5 9.5 9.5 9.5-4.26 9.5-9.5S18.74 2 13.5 2zm0 17c-4.14 0-7.5-3.36-7.5-7.5S9.36 4 13.5 4s7.5 3.36 7.5 7.5-3.36 7.5-7.5 7.5z"/></svg>
+                                RawAccel Dashboard
+                            </button>
+                            <button class="nav-tab" data-tab="tab-sensor-filters">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z"/></svg>
+                                Filtres Capteur
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="section-label">Outils de Visée</div>
+                        <nav class="nav-group">
+                            <button class="nav-tab" data-tab="tab-aim-trainer">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-13c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>
+                                Aim Test Sandbox
+                            </button>
+                            <button class="nav-tab" data-tab="tab-edpi">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v2h2v5h2v-5h2v-2z"/></svg>
+                                Calculateur eDPI
+                            </button>
+                            <button class="nav-tab" data-tab="tab-latency">
+                                <svg class="nav-icon" viewBox="0 0 24 24" style="fill: none; stroke: currentColor; stroke-width: 2;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                Analyse de Latence
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="section-label">Gestion des Profils</div>
+                        <div class="profile-manager-row" style="display: flex; gap: 8px; padding: 0 4px; margin-bottom: 6px;">
+                            <select id="profile-select-dropdown" class="btn-select" style="flex: 1; font-size: 0.8rem; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary);">
+                               <option value="default">Profil par défaut</option>
+                                <option value="fps">FPS - Compétitif</option>
+                                <option value="precision">Sniper Précision</option>
+                            </select>
+                            <button id="btn-save-profile" class="btn secondary-btn" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px;" title="Enregistrer le profil">+</button>
+                        </div>
+                        <div style="display: flex; gap: 6px; padding: 0 4px;">
+                            <button id="btn-export-profile" class="btn secondary-btn" style="flex: 1; padding: 4px 0; font-size: 0.72rem; border-radius: 4px;" title="Exporter la configuration sous forme de fichier JSON">Export</button>
+                            <button id="btn-import-profile" class="btn secondary-btn" style="flex: 1; padding: 4px 0; font-size: 0.72rem; border-radius: 4px;" title="Importer une configuration depuis un fichier JSON">Import</button>
+                        </div>
+                        <input type="file" id="import-profile-file" style="display: none;" accept=".json">
+                    </div>
+                </div>
+
+                <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 8px; margin-bottom: 20px;">
+                    <button id="connect-btn" class="connect-action-btn">Connecter la Souris</button>
+                    <button id="btn-toggle-sidebar" class="sidebar-toggle-btn" title="Réduire/Agrandir la Navigation">
+                        <svg class="toggle-arrow-icon" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/></svg>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Dashboard Screens Workspace -->
+            <main class="app-content-area">
+                
+                <!-- Tab: Dashboard / Accueil -->
+                <div id="tab-dashboard" class="tab-screen active">
+                    <div class="screen-header">
+                        <h2>Tableau de Bord Télémétrique</h2>
+                        <p class="screen-desc">Visualisation en temps réel des performances de votre souris et de votre système.</p>
+                    </div>
+                    
+                    <div class="dashboard-customizer-bar">
+                        <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Configurer l'affichage :</span>
+                        <div class="dashboard-toggles-row">
+                            <label class="toggle-control-inline">
+                                <input type="checkbox" id="toggle-widget-dpi" checked>
+                                <span class="toggle-label-inline">DPI & Sensibilité</span>
+                            </label>
+                            <label class="toggle-control-inline">
+                                <input type="checkbox" id="toggle-widget-telemetry" checked>
+                                <span class="toggle-label-inline">Vitesse & Télémétrie</span>
+                            </label>
+                            <label class="toggle-control-inline">
+                                <input type="checkbox" id="toggle-widget-system" checked>
+                                <span class="toggle-label-inline">Ressources Système</span>
+                            </label>
+                            <label class="toggle-control-inline">
+                                <input type="checkbox" id="toggle-widget-filters" checked>
+                                <span class="toggle-label-inline">Statut des Filtres</span>
+                            </label>
+                            <label class="toggle-control-inline">
+                                <input type="checkbox" id="toggle-widget-chart" checked>
+                                <span class="toggle-label-inline">Graphique Waveform</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-widgets-grid" id="dashboard-widgets-container">
+                        <!-- Widget: Connection Status Radar -->
+                        <div class="card connection-status-widget" id="connection-status-widget" style="grid-column: span 2; display: flex; align-items: center; justify-content: space-between; padding: 20px; position: relative; overflow: hidden; background: linear-gradient(135deg, rgba(13, 245, 211, 0.02), rgba(167, 139, 250, 0.04)); border: 1px solid rgba(13, 245, 211, 0.12); border-radius: 12px; margin-bottom: 4px;">
+                            <div style="display: flex; align-items: center; gap: 20px; z-index: 2;">
+                                <div class="radar-container">
+                                    <div class="radar-ping" id="radar-ping-1"></div>
+                                    <div class="radar-ping-slow" id="radar-ping-2"></div>
+                                    <div class="radar-core">
+                                        <svg viewBox="0 0 24 24" id="connection-icon" style="width: 18px; height: 18px; fill: var(--color-primary); transition: fill 0.3s;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); letter-spacing: 0.5px; text-transform: uppercase;">Statut de Connexion Capteur</h3>
+                                    <p id="connection-widget-text" style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.3;">Périphérique déconnecté. En attente d'association USB...</p>
+                                </div>
+                            </div>
+                            <button id="widget-connect-btn" class="btn primary-btn glow-btn-anim" style="z-index: 2; padding: 8px 16px; font-size: 0.75rem; border-radius: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: linear-gradient(135deg, var(--color-primary), #00a2ff); color: #000; border: none; box-shadow: 0 4px 12px rgba(0, 210, 255, 0.2);">Connecter la Souris</button>
+                        </div>
+
+                        <!-- Widget: DPI & Sensibilité -->
+                        <div class="card widget-card drag-widget" draggable="true" id="widget-dpi">
+                            <div class="widget-drag-handle">
+                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 12c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm0-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor"/></svg>
+                            </div>
+                            <h3 class="card-title">Sensibilité Active</h3>
+                            <div class="widget-large-display">
+                                <span class="widget-value-large" id="dash-active-dpi">1600</span>
+                                <span class="widget-unit-large">DPI</span>
+                            </div>
+                            <div class="widget-footer-info">
+                                <span>Profil : <strong id="dash-active-profile" style="color: var(--color-secondary);">FPS - Compétitif</strong></span>
+                                <span>eDPI : <strong id="dash-effective-sens" style="color: var(--color-primary);">400</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Vitesse & Télémétrie -->
+                        <div class="card widget-card drag-widget" draggable="true" id="widget-telemetry">
+                            <div class="widget-drag-handle">
+                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 12c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm0-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor"/></svg>
+                            </div>
+                            <h3 class="card-title">Mouvements & Capteur</h3>
+                            <div class="widget-stats-list">
+                                <div class="stat-item-row">
+                                    <span class="stat-label">Vitesse Instantanée</span>
+                                    <span class="stat-value mono" id="dash-mouse-speed">0.00 m/s</span>
+                                </div>
+                                <div class="stat-progress-bar">
+                                    <div class="stat-progress-fill" id="speed-progress" style="width: 0%; background: var(--color-primary);"></div>
+                                </div>
+                                <div class="stat-item-row">
+                                    <span class="stat-label">Accélération Max</span>
+                                    <span class="stat-value mono" id="dash-mouse-accel">0.00 G</span>
+                                </div>
+                                <div class="stat-progress-bar">
+                                    <div class="stat-progress-fill" id="accel-progress" style="width: 0%; background: var(--color-secondary);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Ressources & Latence -->
+                        <div class="card widget-card drag-widget" draggable="true" id="widget-system">
+                            <div class="widget-drag-handle">
+                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 12c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm0-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor"/></svg>
+                            </div>
+                            <h3 class="card-title">Télémétrie Système</h3>
+                            <div class="widget-stats-list">
+                                <div class="stat-item-row">
+                                    <span class="stat-label">Rapport (Polling)</span>
+                                    <span class="stat-value mono" id="dash-polling-rate">1000 Hz</span>
+                                </div>
+                                <div class="stat-item-row">
+                                    <span class="stat-label">Latence</span>
+                                    <span class="stat-value mono" id="dash-latency" style="color: var(--color-success);">0.15 ms</span>
+                                </div>
+                                <div class="stat-item-row">
+                                    <span class="stat-label">Traitement Kernel</span>
+                                    <span class="stat-value mono" id="dash-processing-time">48 µs</span>
+                                </div>
+                                <div class="stat-dual-progress">
+                                    <div class="progress-ring-mini">
+                                        <span class="progress-ring-label">CPU</span>
+                                        <span class="progress-ring-val mono" id="dash-cpu-val">1.2%</span>
+                                    </div>
+                                    <div class="progress-ring-mini">
+                                        <span class="progress-ring-label">RAM</span>
+                                        <span class="progress-ring-val mono" id="dash-ram-val">18 MB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Statut des Filtres -->
+                        <div class="card widget-card drag-widget" draggable="true" id="widget-filters">
+                            <div class="widget-drag-handle">
+                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 12c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm0-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor"/></svg>
+                            </div>
+                            <h3 class="card-title">Filtres de Capteur Actifs</h3>
+                            <div class="widget-filters-badges">
+                                <div class="filter-badge inactive" id="badge-rawaccel">
+                                    <span class="badge-dot"></span>
+                                    <span class="badge-name">RawAccel</span>
+                                </div>
+                                <div class="filter-badge inactive" id="badge-snap">
+                                    <span class="badge-dot"></span>
+                                    <span class="badge-name">Angle Snapping</span>
+                                </div>
+                                <div class="filter-badge inactive" id="badge-ripple">
+                                    <span class="badge-dot"></span>
+                                    <span class="badge-name">Ripple Control</span>
+                                </div>
+                                <div class="filter-badge inactive" id="badge-deadzone">
+                                    <span class="badge-dot"></span>
+                                    <span class="badge-name">Zone Morte</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Graphique Waveform -->
+                        <div class="card widget-card drag-widget large-widget" draggable="true" id="widget-chart" style="grid-column: span 2;">
+                            <div class="widget-drag-handle">
+                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 12c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm0-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor"/></svg>
+                            </div>
+                            <div class="chart-header-row">
+                                <h3 class="card-title" style="border-bottom: none; padding-bottom: 0;">Oscilloscope Temps Réel (Vélocité)</h3>
+                                <div class="chart-controls-row">
+                                    <label for="chart-zoom-slider" style="font-size: 0.72rem; color: var(--text-muted);">Zoom :</label>
+                                    <input type="range" id="chart-zoom-slider" min="1" max="5" step="0.5" value="1" class="custom-range" style="width: 80px;">
+                                    <button class="btn secondary-btn" id="btn-export-csv" style="padding: 4px 10px; font-size: 0.72rem;">Exporter CSV</button>
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-height: 200px; position: relative;">
+                                <canvas id="dashboard-telemetry-canvas" style="background: #050608; border: 1px solid var(--border-color); border-radius: 8px; width: 100%; height: 100%; display: block;"></canvas>
+                                <div class="chart-tooltip" id="chart-tooltip-el" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Personnalisation -->
+                <div id="tab-customization" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Personnalisation & Design System</h2>
+                        <p class="screen-desc">Adaptez l'interface de l'application selon vos préférences d'affichage et d'esthétique.</p>
+                    </div>
+                    
+                    <div class="grid-layout">
+                        <!-- Left Column: Theme Engine -->
+                        <div class="card col-left">
+                            <h3 class="card-title">Palette de Couleurs</h3>
+                            <div class="theme-presets-grid">
+                                <button class="preset-btn active" data-primary="#0df5d3" data-secondary="#a78bfa" style="background: linear-gradient(135deg, #0df5d3, #a78bfa);"></button>
+                                <button class="preset-btn" data-primary="#00d2ff" data-secondary="#00a2ff" style="background: linear-gradient(135deg, #00d2ff, #00a2ff);"></button>
+                                <button class="preset-btn" data-primary="#a855f7" data-secondary="#ec4899" style="background: linear-gradient(135deg, #a855f7, #ec4899);"></button>
+                                <button class="preset-btn" data-primary="#10b981" data-secondary="#059669" style="background: linear-gradient(135deg, #10b981, #059669);"></button>
+                            </div>
+                            
+                            <div class="form-grid" style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                                <div class="form-group">
+                                    <label for="color-picker-primary">Couleur Principale</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="color-picker-primary" value="#0df5d3">
+                                        <span class="color-hex-val" id="hex-primary">#0df5d3</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="color-picker-secondary">Couleur d'Accent</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="color-picker-secondary" value="#a78bfa">
+                                        <span class="color-hex-val" id="hex-secondary">#a78bfa</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Dimensions & Effects -->
+                        <div class="card col-right">
+                            <h3 class="card-title">Mise en Page & Transparence</h3>
+                            <div class="form-group" style="margin-top: 10px;">
+                                <label for="slider-border-radius">Arrondi des angles (Bordures)</label>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <input type="range" id="slider-border-radius" min="0" max="24" step="2" value="12" class="custom-range" style="flex: 1;">
+                                    <span id="display-border-radius" class="mono" style="color: var(--color-primary); min-width: 40px;">12 px</span>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top: 10px;">
+                                <label for="slider-transparency">Opacité du Verre (Glassmorphism)</label>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <input type="range" id="slider-transparency" min="20" max="95" step="5" value="45" class="custom-range" style="flex: 1;">
+                                    <span id="display-transparency" class="mono" style="color: var(--color-primary); min-width: 40px;">45%</span>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top: 10px;">
+                                <label for="slider-ui-scale">Échelle de l'Interface</label>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <input type="range" id="slider-ui-scale" min="80" max="120" step="5" value="100" class="custom-range" style="flex: 1;">
+                                    <span id="display-ui-scale" class="mono" style="color: var(--color-primary); min-width: 40px;">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: DPI (G-LAB) -->
+                <div id="tab-dpi" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Sensibilité du Capteur (DPI)</h2>
+                        <p class="screen-desc">Configurez les profils de sensibilité de la puce optique Instant A704.</p>
+                    </div>
+                    
+                    <div class="grid-layout">
+                        <div class="card col-left">
+                            <h3 class="card-title">Profils DPI Disponibles</h3>
+                            <div class="dpi-profile-list">
+                                <!-- Profile Rows -->
+                                <div class="dpi-row" data-idx="0">
+                                    <label class="custom-radio">
+                                        <input type="radio" name="active-dpi" value="0" checked>
+                                        <span class="radio-mark"></span>
+                                    </label>
+                                    <span class="profile-num">Profil 1</span>
+                                    <div class="profile-color-indicator" style="background-color: #0088ff;"></div>
+                                    <span class="dpi-value-text" id="dpi-val-readout-0">800 DPI</span>
+                                    <label class="custom-checkbox">
+                                        <input type="checkbox" id="dpi-enable-0" checked disabled>
+                                        <span class="checkbox-mark"></span>
+                                    </label>
+                                </div>
+                                <div class="dpi-row" data-idx="1">
+                                    <label class="custom-radio">
+                                        <input type="radio" name="active-dpi" value="1">
+                                        <span class="radio-mark"></span>
+                                    </label>
+                                    <span class="profile-num">Profil 2</span>
+                                    <div class="profile-color-indicator" style="background-color: #ffaa00;"></div>
+                                    <span class="dpi-value-text" id="dpi-val-readout-1">1600 DPI</span>
+                                    <label class="custom-checkbox">
+                                        <input type="checkbox" id="dpi-enable-1" checked>
+                                        <span class="checkbox-mark"></span>
+                                    </label>
+                                </div>
+                                <div class="dpi-row" data-idx="2">
+                                    <label class="custom-radio">
+                                        <input type="radio" name="active-dpi" value="2">
+                                        <span class="radio-mark"></span>
+                                    </label>
+                                    <span class="profile-num">Profil 3</span>
+                                    <div class="profile-color-indicator" style="background-color: #00ff66;"></div>
+                                    <span class="dpi-value-text" id="dpi-val-readout-2">4800 DPI</span>
+                                    <label class="custom-checkbox">
+                                        <input type="checkbox" id="dpi-enable-2" checked>
+                                        <span class="checkbox-mark"></span>
+                                    </label>
+                                </div>
+                                <div class="dpi-row" data-idx="3">
+                                    <label class="custom-radio">
+                                        <input type="radio" name="active-dpi" value="3">
+                                        <span class="radio-mark"></span>
+                                    </label>
+                                    <span class="profile-num">Profil 4</span>
+                                    <div class="profile-color-indicator" style="background-color: #ff00ff;"></div>
+                                    <span class="dpi-value-text" id="dpi-val-readout-3">12800 DPI</span>
+                                    <label class="custom-checkbox">
+                                        <input type="checkbox" id="dpi-enable-3" checked>
+                                        <span class="checkbox-mark"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card col-right">
+                            <h3 class="card-title">Ajustement Sensibilité</h3>
+                            <div class="dpi-slider-container">
+                                <div class="slider-header">
+                                    <span class="slider-label-desc">Sensibilité Actuelle :</span>
+                                    <span class="highlight-val" id="active-dpi-display">800 DPI</span>
+                                </div>
+                                <input type="range" id="dpi-slider" min="1" max="64" step="1" value="4" class="custom-range">
+                                <div class="slider-labels" id="dpi-slider-labels">
+                                    <span>200 DPI</span>
+                                    <span id="dpi-mid-label">6400 DPI</span>
+                                    <span id="dpi-max-label">12800 DPI</span>
+                                </div>
+                                <p class="help-text" id="dpi-sensor-desc">Configurez les pas du capteur. L'Instant A704 supporte 64 pas physiques de 200 DPI chacun.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: RGB (G-LAB) -->
+                <div id="tab-rgb" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Effets Lumineux RGB</h2>
+                        <p class="screen-desc">Contrôlez l'illumination du logo et de la bande LED inférieure.</p>
+                    </div>
+                    <div class="grid-layout">
+                        <div class="card col-left">
+                            <h3 class="card-title">Mode d'éclairage</h3>
+                            <div class="rgb-modes">
+                                <label class="rgb-option">
+                                    <input type="radio" name="rgb-mode" value="16" checked>
+                                    <span class="option-card">
+                                        <span class="mode-name">Respiration Lente</span>
+                                        <span class="mode-desc">Alternance fluide de couleurs.</span>
+                                    </span>
+                                </label>
+                                <label class="rgb-option">
+                                    <input type="radio" name="rgb-mode" value="19">
+                                    <span class="option-card">
+                                        <span class="mode-name">Respiration Rapide</span>
+                                        <span class="mode-desc">Effet battement dynamique.</span>
+                                    </span>
+                                </label>
+                                <label class="rgb-option">
+                                    <input type="radio" name="rgb-mode" value="21">
+                                    <span class="option-card">
+                                        <span class="mode-name">Mode Vitesse Élevée</span>
+                                        <span class="mode-desc">Effet pulsé rapide.</span>
+                                    </span>
+                                </label>
+                                <label class="rgb-option">
+                                    <input type="radio" name="rgb-mode" value="22">
+                                    <span class="option-card">
+                                        <span class="mode-name">Statique</span>
+                                        <span class="mode-desc">Fixe la couleur du profil DPI actif.</span>
+                                    </span>
+                                </label>
+                                <label class="rgb-option">
+                                    <input type="radio" name="rgb-mode" value="23">
+                                    <span class="option-card">
+                                        <span class="mode-name">Désactivé</span>
+                                        <span class="mode-desc">Éteint les LED de la souris.</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="card col-right rgb-visualizer-card">
+                            <h3 class="card-title">Aperçu Visuel</h3>
+                            <div class="mouse-led-visualizer">
+                                <div class="mouse-silhouette">
+                                    <div class="led-glow logo-led" id="led-logo"></div>
+                                    <div class="led-glow strip-led" id="led-strip"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Buttons (G-LAB) -->
+                <div id="tab-buttons" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Assignation des Boutons</h2>
+                        <p class="screen-desc">Mappez les fonctions physiques sur l'un des 7 boutons programmables.</p>
+                    </div>
+                    <div class="grid-layout">
+                        <div class="card col-left">
+                            <h3 class="card-title">Mappage des touches</h3>
+                            <div class="button-mapping-list">
+                                <!-- Button rows -->
+                                <div class="button-map-row" data-btn="0">
+                                    <span class="btn-num">1</span>
+                                    <span class="btn-label">Bouton Gauche (LMB)</span>
+                                    <select class="btn-select" id="btn-select-0">
+                                        <option value="0">Clic Gauche</option>
+                                        <option value="1">Clic Milieu</option>
+                                        <option value="2">Clic Droit</option>
+                                        <option value="3">Retour</option>
+                                        <option value="4">Avancer</option>
+                                        <option value="5">Cycle DPI</option>
+                                        <option value="6">Bureau</option>
+                                        <option value="7">Double Clic</option>
+                                        <option value="8">Tir (Feu)</option>
+                                        <option value="9">DPI +</option>
+                                        <option value="10">DPI -</option>
+                                    </select>
+                                </div>
+                                <div class="button-map-row" data-btn="1">
+                                    <span class="btn-num">2</span>
+                                    <span class="btn-label">Bouton Milieu (Molette)</span>
+                                    <select class="btn-select" id="btn-select-1">
+                                        <option value="0">Clic Gauche</option>
+                                        <option value="1" selected>Clic Milieu</option>
+                                        <option value="2">Clic Droit</option>
+                                        <option value="3">Retour</option>
+                                        <option value="4">Avancer</option>
+                                        <option value="5">Cycle DPI</option>
+                                        <option value="6">Bureau</option>
+                                        <option value="7">Double Clic</option>
+                                        <option value="8">Tir (Feu)</option>
+                                        <option value="9">DPI +</option>
+                                        <option value="10">DPI -</option>
+                                    </select>
+                                </div>
+                                <div class="button-map-row" data-btn="2">
+                                    <span class="btn-num">3</span>
+                                    <span class="btn-label">Bouton Droit (RMB)</span>
+                                    <select class="btn-select" id="btn-select-2">
+                                        <option value="0">Clic Gauche</option>
+                                        <option value="1">Clic Milieu</option>
+                                        <option value="2" selected>Clic Droit</option>
+                                        <option value="3">Retour</option>
+                                        <option value="4">Avancer</option>
+                                        <option value="5">Cycle DPI</option>
+                                        <option value="6">Bureau</option>
+                                        <option value="7">Double Clic</option>
+                                        <option value="8">Tir (Feu)</option>
+                                        <option value="9">DPI +</option>
+                                        <option value="10">DPI -</option>
+                                    </select>
+                                </div>
+                                <div class="button-map-row" data-btn="3">
+                                    <span class="btn-num">4</span>
+                                    <span class="btn-label">Bouton Latéral Avancer</span>
+                                    <select class="btn-select" id="btn-select-3">
+                                        <option value="0">Clic Gauche</option>
+                                        <option value="1">Clic Milieu</option>
+                                        <option value="2">Clic Droit</option>
+                                        <option value="3">Retour</option>
+                                        <option value="4" selected>Avancer</option>
+                                        <option value="5">Cycle DPI</option>
+                                        <option value="6">Bureau</option>
+                                        <option value="7">Double Clic</option>
+                                        <option value="8">Tir (Feu)</option>
+                                        <option value="9">DPI +</option>
+                                        <option value="10">DPI -</option>
+                                    </select>
+                                </div>
+                                <div class="button-map-row" data-btn="4">
+                                    <span class="btn-num">5</span>
+                                    <span class="btn-label">Bouton Latéral Reculer</span>
+                                    <select class="btn-select" id="btn-select-4">
+                                        <option value="0">Clic Gauche</option>
+                                        <option value="1">Clic Milieu</option>
+                                        <option value="2">Clic Droit</option>
+                                        <option value="3" selected>Retour</option>
+                                        <option value="4">Avancer</option>
+                                        <option value="5">Cycle DPI</option>
+                                        <option value="6">Bureau</option>
+                                        <option value="7">Double Clic</option>
+                                        <option value="8">Tir (Feu)</option>
+                                        <option value="9">DPI +</option>
+                                        <option value="10">DPI -</option>
+                                    </select>
+                                </div>
+                                <div class="button-map-row" data-btn="5">
+                                    <span class="btn-num">6</span>
+                                    <span class="btn-label">Bouton DPI +</span>
+                                    <select class="btn-select" id="btn-select-5">
+                                        <option value="0">Clic Gauche</option>
+                                        <option value="1">Clic Milieu</option>
+                                        <option value="2">Clic Droit</option>
+                                        <option value="3">Retour</option>
+                                        <option value="4">Avancer</option>
+                                        <option value="5">Cycle DPI</option>
+                                        <option value="6">Bureau</option>
+                                        <option value="7">Double Clic</option>
+                                        <option value="8">Tir (Feu)</option>
+                                        <option value="9" selected>DPI +</option>
+                                        <option value="10">DPI -</option>
+                                    </select>
+                                </div>
+                                <div class="button-map-row" data-btn="6">
+                                    <span class="btn-num">7</span>
+                                    <span class="btn-label">Bouton DPI -</span>
+                                    <select class="btn-select" id="btn-select-6">
+                                        <option value="0">Clic Gauche</option>
+                                        <option value="1">Clic Milieu</option>
+                                        <option value="2">Clic Droit</option>
+                                        <option value="3">Retour</option>
+                                        <option value="4">Avancer</option>
+                                        <option value="5">Cycle DPI</option>
+                                        <option value="6">Bureau</option>
+                                        <option value="7">Double Clic</option>
+                                        <option value="8">Tir (Feu)</option>
+                                        <option value="9">DPI +</option>
+                                        <option value="10" selected>DPI -</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card col-right mouse-preview-card" id="mouse-preview-card">
+                            <h3 class="card-title">Aperçu interactif</h3>
+                            <div class="svg-container">
+                                <svg id="mouse-blueprint" viewBox="0 0 200 300" class="mouse-svg">
+                                    <path class="mouse-part main-body" d="M100 20 C60 20, 40 50, 40 120 C40 180, 50 260, 100 280 C150 260, 160 180, 160 120 C160 50, 140 20, 100 20 Z" />
+                                    <path id="part-lmb" class="mouse-part click-part" d="M100 25 C80 25, 50 35, 45 90 L95 90 C95 50, 100 25, 100 25 Z" />
+                                    <path id="part-rmb" class="mouse-part click-part" d="M100 25 C120 25, 150 35, 155 90 L105 90 C105 50, 100 25, 100 25 Z" />
+                                    <rect id="part-wheel" class="mouse-part wheel-part" x="96" y="45" width="8" height="25" rx="3" />
+                                    <rect id="part-dpip" class="mouse-part dpi-btn-part" x="95" y="85" width="10" height="12" rx="2" />
+                                    <rect id="part-dpim" class="mouse-part dpi-btn-part" x="95" y="102" width="10" height="12" rx="2" />
+                                    <path id="part-side-fwd" class="mouse-part side-btn" d="M36 100 Q36 90, 39 85 L39 105 Z" />
+                                    <path id="part-side-bwd" class="mouse-part side-btn" d="M36 125 Q36 115, 39 110 L39 130 Z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Advanced (G-LAB) -->
+                <div id="tab-advanced" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Paramètres Avancés</h2>
+                        <p class="screen-desc">Fonctionnalités avancées de la molette et délai de feu automatique.</p>
+                    </div>
+                    <div class="grid-layout">
+                        <!-- Left Column (Stacked Cards) -->
+                        <div class="col-left" style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="card">
+                                <h3 class="card-title">Comportement Molette</h3>
+                                <div class="scroll-modes">
+                                    <label class="advanced-option">
+                                        <input type="radio" name="scroll-mode" value="0" checked>
+                                        <span class="option-card">
+                                            <span class="mode-name">Défilement Écran (Standard)</span>
+                                            <span class="mode-desc">La molette fait défiler les pages Web et fenêtres.</span>
+                                        </span>
+                                    </label>
+                                    <label class="advanced-option">
+                                        <input type="radio" name="scroll-mode" value="1">
+                                        <span class="option-card">
+                                            <span class="mode-name">Contrôle Volume Système</span>
+                                            <span class="mode-desc">La molette ajuste directement le volume Windows.</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <h3 class="card-title">Performances Capteur</h3>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="polling-rate">Taux de Rapport (Polling Rate)</label>
+                                        <select id="polling-rate" class="btn-select">
+                                            <option value="125">125 Hz (Bureautique)</option>
+                                            <option value="250">250 Hz (Standard)</option>
+                                            <option value="500">500 Hz (Gaming)</option>
+                                            <option value="1000" selected>1000 Hz (Esport)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lod-select">Distance de Détection (LOD)</label>
+                                        <select id="lod-select" class="btn-select">
+                                            <option value="0">Basse (1.5mm)</option>
+                                            <option value="1">Haute (3.0mm)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-top: 8px;">
+                                    <label for="double-click-slider">Vitesse Double-Clic</label>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <input type="range" id="double-click-slider" min="200" max="1000" step="50" value="500" class="custom-range" style="flex: 1;">
+                                        <span id="double-click-display" class="mono" style="font-size: 0.82rem; min-width: 55px; font-family: var(--font-mono); color: var(--color-primary);">500 ms</span>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-top: 12px;">
+                                    <label for="debounce-time">Debounce Time (Anti-rebond)</label>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <input type="range" id="debounce-time" min="0" max="20" step="2" value="10" class="custom-range" style="flex: 1;">
+                                        <span id="debounce-display" class="mono" style="font-size: 0.82rem; min-width: 45px; font-family: var(--font-mono); color: var(--color-primary);">10 ms</span>
+                                    </div>
+                                    <p class="help-text" style="margin-top: 4px;">Un délai bas (2-4ms) permet le butterfly click mais risque les clics involontaires.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="col-right" style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="card">
+                                <h3 class="card-title">Vitesse Tir Automatique</h3>
+                                <div class="fire-rate-config">
+                                    <div class="slider-header">
+                                        <span class="slider-label-desc">Intervalle de Tir :</span>
+                                        <span class="highlight-val" id="fire-rate-display">50 ms</span>
+                                    </div>
+                                    <input type="range" id="fire-rate-slider" min="1" max="255" value="50" class="custom-range">
+                                    <div class="slider-labels">
+                                        <span>Rapide (1ms)</span>
+                                        <span>Moyen (100ms)</span>
+                                        <span>Lent (250ms)</span>
+                                    </div>
+                                    <p class="help-text">Configure l'intervalle entre chaque clic envoyé lorsque l'action "Tir" est maintenue.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tab: eDPI Calculator -->
+                <div id="tab-edpi" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Calculateur de Sensibilité eDPI</h2>
+                        <p class="screen-desc">Trouvez votre eDPI et la distance parcourue pour un 360° (cm/360) selon votre jeu favori.</p>
+                    </div>
+                    <div class="grid-layout">
+                        <div class="card col-left">
+                            <h3 class="card-title">Vos Paramètres</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="edpi-mouse-dpi">DPI de la souris</label>
+                                    <input type="number" id="edpi-mouse-dpi" class="rawaccel-field" style="width: 100%; text-align: left; padding: 10px;" value="800">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edpi-game">Jeu</label>
+                                    <select id="edpi-game" class="btn-select" style="width: 100%; padding: 10px;">
+                                        <option value="valorant">Valorant</option>
+                                        <option value="cs2">CS2 / Apex Legends</option>
+                                        <option value="rainbow6">Rainbow Six Siege</option>
+                                        <option value="overwatch">Overwatch 2</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label for="edpi-in-game">Sensibilité en jeu</label>
+                                    <input type="number" id="edpi-in-game" step="0.01" class="rawaccel-field" style="width: 100%; text-align: left; padding: 10px;" value="0.3">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2; margin-top: 8px;">
+                                    <div class="checkbox-container-row">
+                                        <label class="custom-checkbox" style="margin-right: 0;">
+                                            <input type="checkbox" id="edpi-use-rawaccel">
+                                            <span class="checkbox-mark"></span>
+                                        </label>
+                                        <div style="display: flex; flex-direction: column; cursor: pointer;" onclick="document.getElementById('edpi-use-rawaccel').click()">
+                                            <span style="font-weight: 600; font-size: 0.9rem; line-height: 1.1;">Prendre en compte RawAccel</span>
+                                            <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Multiplie par le multiplicateur de sensibilité de RawAccel.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="btn-calc-edpi" class="btn primary-btn glow-btn-anim" style="margin-top: 15px;">Calculer</button>
+                        </div>
+                        <div class="card col-right">
+                            <h3 class="card-title">Résultats</h3>
+                            <div style="display: flex; flex-direction: column; gap: 24px; justify-content: center; height: 100%; align-items: center; text-align: center;">
+                                <div>
+                                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">eDPI Effectif</div>
+                                    <div class="mono" id="edpi-result-val" style="font-size: 3rem; font-weight: 800; color: var(--color-primary); text-shadow: 0 0 20px rgba(0, 210, 255, 0.4);">240</div>
+                                </div>
+                                <div style="width: 60%; height: 1px; background: var(--border-color);"></div>
+                                <div>
+                                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Distance pour 360°</div>
+                                    <div class="mono" id="cm360-result-val" style="font-size: 2rem; font-weight: 700; color: var(--color-secondary); text-shadow: 0 0 15px rgba(192, 132, 252, 0.4);">54.2 cm</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Sensor Filters (Esports) -->
+                <div id="tab-sensor-filters" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Filtres Sensoriels Esports</h2>
+                        <p class="screen-desc">Stabilisez et optimisez la trajectoire du capteur. Testez le rendu physique en direct sur le moniteur.</p>
+                    </div>
+                    <div class="grid-layout">
+                        <!-- Left Column (Esports Filters Cards) -->
+                        <div class="col-left" style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="card">
+                                <h3 class="card-title">Ajustement d'Angle & Snapping</h3>
+                                <div class="checkbox-container-row">
+                                    <label class="custom-checkbox" style="margin-right: 0;">
+                                        <input type="checkbox" id="angle-snapping">
+                                        <span class="checkbox-mark"></span>
+                                    </label>
+                                    <div style="display: flex; flex-direction: column; cursor: pointer;" onclick="document.getElementById('angle-snapping').click()">
+                                        <span style="font-weight: 600; font-size: 0.9rem;">Angle Snapping</span>
+                                        <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Force le curseur à se verrouiller sur des axes rectilignes.</span>
+                                    </div>
+                                </div>
+                                <div id="row-snap-threshold" style="display: none; margin-top: 12px; border-left: 2px solid var(--color-primary); padding-left: 14px; display: flex; flex-direction: column; gap: 10px;">
+                                    <div class="form-group">
+                                        <label for="snap-mode">Mode d'Snapping</label>
+                                        <select id="snap-mode" class="btn-select" style="width: 100%; padding: 8px;">
+                                            <option value="hysteresis" selected>Axe Verrouillé (Hystérésis)</option>
+                                            <option value="strict">Grille Stricte (Lignes Droites)</option>
+                                            <option value="predictive">Prédiction Angulaire Relative</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="snap-threshold">Seuil d'Angle (Sensibilité)</label>
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <input type="range" id="snap-threshold" min="5" max="30" step="1" value="15" class="custom-range" style="flex: 1;">
+                                            <span id="snap-threshold-display" class="mono" style="font-size: 0.82rem; min-width: 45px; color: var(--color-primary);">15°</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="snap-stiffness">Force du Verrou (Stiffness)</label>
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <input type="range" id="snap-stiffness" min="1" max="10" step="1" value="6" class="custom-range" style="flex: 1;">
+                                            <span id="snap-stiffness-display" class="mono" style="font-size: 0.82rem; min-width: 45px; color: var(--color-primary);">6/10</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <h3 class="card-title">Ripple Control (Lissage Sensoriel)</h3>
+                                <div class="checkbox-container-row">
+                                    <label class="custom-checkbox" style="margin-right: 0;">
+                                        <input type="checkbox" id="ripple-control">
+                                        <span class="checkbox-mark"></span>
+                                    </label>
+                                    <div style="display: flex; flex-direction: column; cursor: pointer;" onclick="document.getElementById('ripple-control').click()">
+                                        <span style="font-weight: 600; font-size: 0.9rem;">Lissage Anti-Ripple</span>
+                                        <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Filtre les micro-tremblements de la main aux sensibilités extrêmes (hauts DPI).</span>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="row-ripple-strength" style="display: none; margin-top: 12px; border-left: 2px solid var(--color-primary); padding-left: 14px;">
+                                    <label for="ripple-strength">Force de lissage (Moyenne mobile)</label>
+                                    <select id="ripple-strength" class="btn-select" style="width: 100%; padding: 10px;">
+                                        <option value="4">Léger (4 échantillons / réactivité max)</option>
+                                        <option value="8" selected>Moyen (8 échantillons / équilibré)</option>
+                                        <option value="12">Fort (12 échantillons / ultra stable / sniper)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <h3 class="card-title">Zone Morte du Capteur (Sniper Guard)</h3>
+                                <div class="checkbox-container-row">
+                                    <label class="custom-checkbox" style="margin-right: 0;">
+                                        <input type="checkbox" id="sensor-deadzone">
+                                        <span class="checkbox-mark"></span>
+                                    </label>
+                                    <div style="display: flex; flex-direction: column; cursor: pointer;" onclick="document.getElementById('sensor-deadzone').click()">
+                                        <span style="font-weight: 600; font-size: 0.9rem;">Zone Morte Statique</span>
+                                        <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Ignore les micro-mouvements involontaires du capteur.</span>
+                                    </div>
+                                </div>
+                                <div id="row-deadzone-threshold" style="display: none; margin-top: 12px; border-left: 2px solid var(--color-primary); padding-left: 14px; display: flex; flex-direction: column; gap: 10px;">
+                                    <div class="form-group">
+                                        <label for="deadzone-shape">Géométrie de la Zone Morte</label>
+                                        <select id="deadzone-shape" class="btn-select" style="width: 100%; padding: 8px;">
+                                            <option value="radial" selected>Circulaire (Radial FPS)</option>
+                                            <option value="axial">Axiale (Indépendante X / Y)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="deadzone-threshold">Seuil de Détection</label>
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <input type="range" id="deadzone-threshold" min="0.1" max="1.5" step="0.1" value="0.4" class="custom-range" style="flex: 1;">
+                                            <span id="deadzone-threshold-display" class="mono" style="font-size: 0.82rem; min-width: 45px; color: var(--color-primary);">0.4 px</span>
+                                        </div>
+                                    </div>
+                                    <div class="checkbox-container-row" style="margin-top: 4px;">
+                                        <label class="custom-checkbox" style="margin-right: 0;">
+                                            <input type="checkbox" id="deadzone-dynamic-filter" checked>
+                                            <span class="checkbox-mark"></span>
+                                        </label>
+                                        <div style="display: flex; flex-direction: column; cursor: pointer;" onclick="document.getElementById('deadzone-dynamic-filter').click()">
+                                            <span style="font-weight: 600; font-size: 0.82rem;">Filtre de bruit dynamique (Smart-Release)</span>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1px;">Réduit la zone morte à grande vitesse pour ne pas brider les flicks rapides.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column (Dedicated Live Sensor Monitor Canvas) -->
+                        <div class="card col-right" style="position: relative; display: flex; flex-direction: column; min-height: 480px;">
+                            <h3 class="card-title" style="margin-bottom: 4px;">Visualiseur de Signal & Trajectoires</h3>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px;">Bougez votre souris dans l'espace ci-dessous pour tester l'impact physique de vos réglages.</p>
+                            
+                            <div style="flex: 1; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; position: relative;">
+                                <canvas id="sensor-monitor-canvas" style="background: #050608; width: 100%; height: 100%; cursor: none; display: block;"></canvas>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.75rem; font-family: var(--font-mono);">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
+                                    <span style="color: var(--text-muted);">Signal Brut</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary);"></span>
+                                    <span style="color: var(--text-secondary);">Signal Filtré</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Aim Trainer -->
+                <div id="tab-aim-trainer" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Aim Test Sandbox</h2>
+                        <p class="screen-desc">Testez vos réglages de sensibilité et vos courbes RawAccel en conditions réelles.</p>
+                    </div>
+                    <div class="grid-layout">
+                        <!-- Sandbox Area -->
+                        <div class="card col-left" style="align-items: center; justify-content: center; min-height: 380px; position: relative;">
+                            <canvas id="aim-trainer-canvas" style="background: #050608; border: 1px solid var(--border-color); border-radius: 8px; width: 100%; height: 100%; cursor: none;"></canvas>
+                        </div>
+                        <!-- Sandbox Controls & Telemetry -->
+                        <div class="card col-right">
+                            <h3 class="card-title">Télémétrie de Visée</h3>
+                            <div style="display: flex; flex-direction: column; gap: 16px;">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Score</label>
+                                        <div class="mono" id="aim-score" style="font-size: 1.5rem; color: var(--color-primary); font-family: var(--font-mono);">0</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Précision</label>
+                                        <div class="mono" id="aim-accuracy" style="font-size: 1.5rem; color: var(--color-secondary); font-family: var(--font-mono);">0.0%</div>
+                                    </div>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Temps de réaction</label>
+                                        <div class="mono" id="aim-reaction" style="font-size: 1.2rem; color: var(--color-success); font-family: var(--font-mono);">0 ms</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Cibles touchées</label>
+                                        <div class="mono" id="aim-hits" style="font-size: 1.2rem; font-family: var(--font-mono);">0 / 0</div>
+                                    </div>
+                                </div>
+                                <div class="form-grid-sep"></div>
+                                <button id="btn-start-aim" class="btn primary-btn glow-btn-anim" style="width: 100%;">Démarrer le Test</button>
+                                <p class="help-text">Cliquez sur "Démarrer le Test" et visez les cibles mouvantes pour éprouver la réactivité de votre configuration souris.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: RawAccel Replica Dashboard -->
+                <div id="tab-rawaccel" class="tab-screen">
+                    
+                    <!-- Exact Replica Shell Structure of RawAccel (Dark Edition) -->
+                    <div class="rawaccel-layout">
+                        
+                        <!-- Left parameters panel (Replicating RawAccel fields) -->
+                        <div class="rawaccel-sidebar-panel">
+                            
+                            <div style="background: rgba(167, 139, 250, 0.08); border-left: 3px solid var(--color-secondary); padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 0.72rem; line-height: 1.35; color: var(--text-secondary);">
+                                <strong>Conseil Esport :</strong> La courbe d'accélération doit être <strong>stable et cohérente</strong> (sans sauts brusques) pour préserver au mieux votre mémoire musculaire et vos micro-ajustements.
+                            </div>
+                            
+                            <!-- Section: Multiplier / Ratio / Rotation -->
+                            <div class="rawaccel-input-group">
+                                <div class="rawaccel-row">
+                                    <label class="rawaccel-label" for="out-dpi">Sens Multiplier</label>
+                                    <div class="rawaccel-input-container">
+                                        <input type="number" id="out-dpi-accel" step="0.01" value="1.00" class="rawaccel-field">
+                                        <span class="rawaccel-current-val" id="val-sens-multi">1</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="rawaccel-row">
+                                    <label class="rawaccel-label" for="yx-ratio-accel">Y/X Ratio</label>
+                                    <div class="rawaccel-input-container">
+                                        <input type="number" id="yx-ratio-accel" step="0.01" value="1.00" class="rawaccel-field">
+                                        <span class="rawaccel-current-val" id="val-yx-ratio">1</span>
+                                        <button class="rawaccel-lock-btn active" id="btn-lock-yx" title="Lock X & Y">
+                                            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="rawaccel-row">
+                                    <label class="rawaccel-label" for="rotation-accel">Rotation</label>
+                                    <div class="rawaccel-input-container">
+                                        <input type="number" id="rotation-accel" step="0.5" value="0" class="rawaccel-field">
+                                        <span class="rawaccel-current-val" id="val-rotation">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section: Dropdown Selection -->
+                            <div class="rawaccel-input-group">
+                                <div class="rawaccel-row no-align">
+                                    <select id="accel-mode-raw" class="rawaccel-select">
+                                        <option value="classic">Linear</option>
+                                        <option value="classic">Classic</option>
+                                        <option value="power">Power</option>
+                                        <option value="natural">Natural</option>
+                                        <option value="jump">Jump</option>
+                                        <option value="noaccel">NoAccel</option>
+                                    </select>
+                                    <span class="rawaccel-mode-indicator" id="val-mode-indicator">Linear</span>
+                                </div>
+                                
+                                <div class="rawaccel-row" style="margin-top: 6px;">
+                                    <div class="checkbox-row-rawaccel">
+                                        <input type="checkbox" id="chk-gain" checked>
+                                        <label for="chk-gain">Gain</label>
+                                    </div>
+                                    <span class="rawaccel-current-val" id="val-gain-text">Gain</span>
+                                </div>
+                            </div>
+
+                            <!-- Section: Params -->
+                            <div class="rawaccel-input-group">
+                                <div class="rawaccel-row">
+                                    <label class="rawaccel-label" for="param-accel-raw">Acceleration</label>
+                                    <div class="rawaccel-input-container">
+                                        <input type="number" id="param-accel-raw" step="0.001" value="0.025" class="rawaccel-field">
+                                        <span class="rawaccel-current-val" id="val-accel">0.025</span>
+                                    </div>
+                                </div>
+                                <div class="rawaccel-row">
+                                    <label class="rawaccel-label" for="cap-mode-raw">Cap Type</label>
+                                    <div class="rawaccel-input-container">
+                                        <select id="cap-mode-raw" class="rawaccel-select-inner">
+                                            <option value="output">Output</option>
+                                            <option value="input">Input</option>
+                                            <option value="in_out">Both</option>
+                                        </select>
+                                        <span class="rawaccel-current-val" id="val-cap-type">Output</span>
+                                    </div>
+                                </div>
+                                <div class="rawaccel-row">
+                                    <label class="rawaccel-label" for="param-limit-raw">Cap Output</label>
+                                    <div class="rawaccel-input-container">
+                                        <input type="number" id="param-limit-raw" step="0.05" value="1.8" class="rawaccel-field">
+                                        <span class="rawaccel-current-val" id="val-cap-val">1.8</span>
+                                    </div>
+                                </div>
+                                <div class="rawaccel-row">
+                                    <label class="rawaccel-label" for="param-offset-raw">Input Offset</label>
+                                    <div class="rawaccel-input-container">
+                                        <input type="number" id="param-offset-raw" step="0.05" value="0.3" class="rawaccel-field">
+                                        <span class="rawaccel-current-val" id="val-offset">0.3</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section: LUT points data editor -->
+                            <div class="rawaccel-input-group" id="group-lut-data" style="display: none;">
+                                <div class="rawaccel-row no-align" style="flex-direction: column; gap: 6px;">
+                                    <label class="rawaccel-label" for="param-lut-points" style="width: 100%;">LUT Points (Speed,Sens)</label>
+                                    <textarea id="param-lut-points" rows="4" class="rawaccel-field" style="width: 100%; text-align: left; font-family: var(--font-mono); font-size: 0.72rem; height: 80px;" placeholder="0.0, 1.0&#10;10.0, 1.25&#10;20.0, 1.50&#10;30.0, 1.80"></textarea>
+                                    <p class="help-text-mini" style="font-size: 0.65rem; color: var(--text-muted);">Saisissez un point par ligne, séparé par une virgule.</p>
+                                </div>
+                            </div>
+
+                            <!-- Anisotropy (Collapsible) -->
+                            <div class="anisotropy-container">
+                                <button class="anisotropy-trigger" id="btn-anisotropy">
+                                    <span class="arrow-icon">▶</span> Anisotropy
+                                </button>
+                                <div class="anisotropy-content" id="anisotropy-content">
+                                    <p class="help-text-mini">Permet de dissocier les valeurs d'accélération horizontales et verticales pour les mouvements asymétriques.</p>
+                                </div>
+                            </div>
+
+
+
+                            <!-- Sidebar Action Buttons (Classic RawAccel look) -->
+                            <div class="rawaccel-sidebar-actions">
+                                <button class="rawaccel-btn" id="btn-raw-apply">Apply</button>
+                                <button class="rawaccel-btn" id="btn-raw-reset">Reset</button>
+                            </div>
+
+                        </div>
+
+                        <!-- Right Graph & Guides Area -->
+                        <div class="rawaccel-main-panel">
+                            
+                            <!-- The Chart Card -->
+                            <div class="chart-card-raw">
+                                <div class="chart-title-centered">Sensitivity</div>
+                                
+                                <!-- Live Monitor Info Grid -->
+                                <div style="display: flex; justify-content: center; gap: 24px; margin: -10px 0 15px 0; font-family: var(--font-stack);">
+                                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 6px 16px; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Vitesse :</span>
+                                        <strong id="live-speed" class="mono" style="font-size: 0.85rem; color: var(--color-primary);">0.00</strong>
+                                        <span style="font-size: 0.65rem; color: var(--text-muted);">counts/ms</span>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 6px 16px; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Sensibilité active :</span>
+                                        <strong id="live-sens" class="mono" style="font-size: 0.85rem; color: var(--color-secondary);">1.00</strong>
+                                        <span style="font-size: 0.65rem; color: var(--text-muted);">x</span>
+                                    </div>
+                                </div>
+
+                                <div class="chart-legend-top">
+                                    <div class="legend-elem"><span class="legend-line-blue"></span>Accelerated Sensitivity</div>
+                                    <div class="legend-elem"><span class="legend-square-red"></span>Last Mouse Move</div>
+                                </div>
+
+                                <div class="raw-chart-canvas-wrapper">
+                                    <canvas id="rawaccel-exact-canvas"></canvas>
+                                </div>
+                                
+                                <div class="chart-x-axis-title">Input Speed (counts/ms)</div>
+                                <div class="chart-y-axis-title">Ratio of Output to Input</div>
+                            </div>
+
+                            <!-- Integrated Interactive Educational User Guide -->
+                            <div class="guide-card">
+                                <div class="guide-header" id="guide-accordion-trigger">
+                                    <div class="guide-title">
+                                        <svg class="guide-icon-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                        <span>GUIDE : COMMENT TROUVER SA SENSIBILITÉ ACCÉLÉRÉE ?</span>
+                                    </div>
+                                    <span class="accordion-chevron">▼</span>
+                                </div>
+                                
+                                <div class="guide-content" id="guide-accordion-content">
+                                    <div class="guide-columns">
+                                        <div class="guide-col">
+                                            <h4>Pourquoi utiliser l'accélération ?</h4>
+                                            <p>Dans les FPS (Valorant, CS, Apex), les joueurs font face à un dilemme : 
+                                                une sensibilité basse permet un micro-ajustement et un tracking ultra-précis, mais rend difficile les 180° rapides. 
+                                                L'accélération de souris résout ce problème en liant le multiplicateur de sensibilité à la <strong>vitesse physique</strong> de votre main.
+                                            </p>
+                                            <ul class="guide-bullets">
+                                                <li><strong>Mouvements lents :</strong> Sensibilité faible et stable (précision).</li>
+                                                <li><strong>Mouvements rapides (flicks) :</strong> Sensibilité augmentée dynamiquement.</li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="guide-col">
+                                            <h4>La méthode pas-à-pas</h4>
+                                            <ol class="guide-steps">
+                                                <li>
+                                                    <strong>Définir sa sensibilité de base (Multiplier) :</strong>
+                                                    Ajustez `Sens Multiplier` pour que vos lancers lents soient parfaitement contrôlés.
+                                                </li>
+                                                <li>
+                                                    <strong>Déterminer l'offset (Input Offset) :</strong>
+                                                    Configurez la vitesse sous laquelle aucune accélération ne s'applique. Par exemple, `0.3` counts/ms garde vos micro-mouvements bruts.
+                                                </li>
+                                                <li>
+                                                    <strong>Ajuster le Cap (Sens Max) :</strong>
+                                                    Entrez une valeur limite (ex: `1.8`) pour que même avec un geste ultra-rapide, votre sensibilité ne dépasse jamais ce plafond, préservant la mémoire musculaire.
+                                                </li>
+                                                <li>
+                                                    <strong>Faire glisser l'accélération :</strong>
+                                                    Ajustez la pente (Acceleration) jusqu'à ce que la transition sur le graphique vous semble naturelle.
+                                                </li>
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                <!-- Tab: Latency Analysis -->
+                <div id="tab-latency" class="tab-screen">
+                    <div class="screen-header">
+                        <h2>Analyse et Optimisation de la Latence</h2>
+                        <p class="screen-desc">Mesurez, visualisez et optimisez la latence d'entrée de votre souris en temps réel.</p>
+                    </div>
+                    
+                    <div class="grid-layout">
+                        <!-- Left column: Latency summary and Click Latency Test -->
+                        <div class="col-left" style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="card">
+                                <h3 class="card-title">Résumé de la Latence</h3>
+                                <div class="form-grid" style="margin-bottom: 12px;">
+                                    <div class="form-group">
+                                        <label>Motion Latency</label>
+                                        <div class="mono" id="latency-motion-val" style="font-size: 1.6rem; color: var(--color-primary); font-weight: 700;">1.00 ms</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Debounce Delay</label>
+                                        <div class="mono" id="latency-click-val" style="font-size: 1.6rem; color: var(--color-secondary); font-weight: 700;">-- ms</div>
+                                    </div>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Jitter USB (Gigue)</label>
+                                        <div class="mono" id="latency-jitter-val" style="font-size: 1.2rem; color: var(--color-success); font-weight: 700;">0 &mu;s</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Pertes de Paquets</label>
+                                        <div class="mono" id="latency-packetloss-val" style="font-size: 1.2rem; color: var(--color-error); font-weight: 700;">0 (0.00%)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Interactive Click Latency Test -->
+                            <div class="card">
+                                <h3 class="card-title">Test Interactif de Latence de Clic</h3>
+                                <p class="help-text" style="margin-bottom: 12px;">Cliquez à plusieurs reprises dans la zone ci-dessous. Le module mesure l'intervalle d'activation du switch physique pour estimer la latence et détecter le double-clic involontaire.</p>
+                                <div id="click-test-zone" style="height: 120px; border: 2px dashed rgba(255, 255, 255, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(255, 255, 255, 0.02); transition: all 0.2s ease; user-select: none;">
+                                    <span id="click-test-instruction" style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.5px;">CLIQUEZ ICI POUR TESTER</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.72rem; color: var(--text-muted);">
+                                    <span>Clics enregistrés : <strong id="click-test-count" style="color: var(--text-primary);">0</strong></span>
+                                    <button id="btn-reset-click-test" style="background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 0.72rem; font-weight: 700;">Réinitialiser</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Motion Pipeline Flowchart -->
+                            <div class="card">
+                                <h3 class="card-title">Chaîne de Transit du Signal (Motion Pipeline)</h3>
+                                <div class="pipeline-flow" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                                    <div class="pipeline-step" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.02); padding: 8px 12px; border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                        <span style="font-size: 0.78rem; font-weight: 600;">1. Capture Capteur (PixArt 3395)</span>
+                                        <span class="mono" style="font-size: 0.75rem; color: var(--text-secondary);">~0.1 ms</span>
+                                    </div>
+                                    <div class="pipeline-step" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.02); padding: 8px 12px; border-radius: 6px; border-left: 3px solid var(--color-secondary);">
+                                        <span style="font-size: 0.78rem; font-weight: 600;">2. Transmission USB (Polling Rate)</span>
+                                        <span class="mono" id="pipeline-usb-delay" style="font-size: 0.75rem; color: var(--text-secondary);">1.0 ms</span>
+                                    </div>
+                                    <div class="pipeline-step" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.02); padding: 8px 12px; border-radius: 6px; border-left: 3px solid var(--color-success);">
+                                        <span style="font-size: 0.78rem; font-weight: 600;">3. Traitement Noyau Windows & Tauri API</span>
+                                        <span class="mono" style="font-size: 0.75rem; color: var(--text-secondary);">~0.5 ms</span>
+                                    </div>
+                                    <div class="pipeline-step" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.02); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #ffaa00;">
+                                        <span style="font-size: 0.78rem; font-weight: 600;">4. Rendu Affichage (Frame to Input)</span>
+                                        <span class="mono" id="pipeline-frame-delay" style="font-size: 0.75rem; color: var(--text-secondary);">~4.2 ms (240Hz)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right column: Histogram and stability charts -->
+                        <div class="col-right" style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="card" style="flex: 1; display: flex; flex-direction: column; min-height: 380px;">
+                                <h3 class="card-title">Distribution de la Latence (Histogramme)</h3>
+                                <p class="help-text" style="margin-bottom: 12px;">Cet histogramme montre la dispersion temporelle des paquets USB. Une courbe étroite et centrée garantit une fluidité maximale et des tirs réguliers en jeu.</p>
+                                <div style="flex: 1; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: #050608; position: relative;">
+                                    <canvas id="latency-histogram-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.75rem;">
+                                    <span>Stabilité du Polling Rate : <strong id="latency-stability-val" style="color: var(--color-success);">99.2%</strong></span>
+                                    <span>Moyenne Temporelle : <strong id="latency-avg-val" class="mono" style="color: var(--color-primary);">1.00 ms</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- Beautiful Custom Connection Instruction Modal -->
+        <div id="connection-modal" class="custom-modal-overlay" style="display: none;">
+            <div class="custom-modal-card">
+                <div class="custom-modal-glow"></div>
+                <div class="custom-modal-header">
+                    <h3>Association WebHID G-LAB</h3>
+                    <button id="btn-close-connection-modal" class="custom-modal-close-btn">&times;</button>
+                </div>
+                <div class="custom-modal-body">
+                    <div class="modal-radar-container">
+                        <div class="modal-radar-ping"></div>
+                        <div class="modal-radar-ping-slow"></div>
+                        <div class="modal-radar-core">
+                            <svg viewBox="0 0 24 24" class="modal-mouse-icon"><path d="M13 10V3c0-1.1-.9-2-2-2H9C7.9 1 7 1.9 7 3v7H5c-1.1 0-2 .9-2 2v3c0 3.9 3.1 7 7 7h2c3.9 0 7-3.1 7-7v-3c0-1.1-.9-2-2-2h-2zm-4-7h2v5H9V3zm6 12c0 2.8-2.2 5-5 5h-2c-2.8 0-5-2.2-5-5v-3h12v3z" fill="currentColor"/></svg>
+                        </div>
+                    </div>
+                    <div class="modal-instruction-steps">
+                        <p class="modal-instruction-title">Une fenêtre d'autorisation s'ouvre :</p>
+                        <ol>
+                            <li>Sélectionnez la ligne <strong style="color: var(--color-primary);">"USB GAMING MOUSE"</strong> ou <strong style="color: var(--color-secondary);">"Unknown Device (1B1C:1BF0)"</strong>.</li>
+                            <li>Cliquez ensuite sur le bouton <strong style="color: var(--color-primary);">"Connecter"</strong>.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="custom-modal-footer">
+                    <p class="modal-help-note">Cette étape est requise pour communiquer les profils de sensibilité et d'éclairage directement au processeur de votre souris G-LAB.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Action Control Panel Footer (Bottom Bar) -->
+        <footer class="app-global-footer">
+            <div class="telemetry-info">
+                <span>Statut de transmission : <strong id="telemetry-status" style="color: var(--color-primary);">INACTIF</strong></span>
+                <span class="divider">|</span>
+                <span>Latence : <strong id="telemetry-delay" style="color: var(--color-success); font-family: var(--font-mono);">0 ms</strong></span>
+            </div>
+            <div class="actions">
+                <button id="global-reset" class="btn secondary-btn">Annuler</button>
+                <button id="global-apply" class="btn primary-btn glow-btn-anim" style="min-width: 140px;">Enregistrer</button>
+            </div>
+        </footer>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
