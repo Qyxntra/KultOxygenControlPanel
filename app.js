@@ -5,12 +5,12 @@ let activeTab = 'tab-dashboard';
 
 // G-LAB Mouse settings state
 const mouseSettings = {
-    activeDpi: 0,
+    activeDpi: 1,
     dpiProfiles: [
+        { value: 2, enabled: true },  // 400 DPI
         { value: 4, enabled: true },  // 800 DPI
-        { value: 8, enabled: true },  // 1600 DPI
-        { value: 12, enabled: true }, // 2400 DPI
-        { value: 64, enabled: true }  // 12800 DPI
+        { value: 6, enabled: true },  // 1200 DPI
+        { value: 8, enabled: true }   // 1600 DPI
     ],
     rgbMode: 16,
     scrollMode: 0,
@@ -1604,12 +1604,12 @@ globalResetBtn.addEventListener('click', () => {
         }
     } else {
         if (confirm("Réinitialiser les réglages de la souris G-LAB ?")) {
-            mouseSettings.activeDpi = 0;
-            mouseSettings.dpiProfiles[0].value = 4;
-            mouseSettings.dpiProfiles[1].value = 8;
-            mouseSettings.dpiProfiles[2].value = 12;
-            mouseSettings.dpiProfiles[3].value = 64;
-            document.querySelector(`input[name="active-dpi"][value="0"]`).checked = true;
+            mouseSettings.activeDpi = 1;
+            mouseSettings.dpiProfiles[0].value = 2;
+            mouseSettings.dpiProfiles[1].value = 4;
+            mouseSettings.dpiProfiles[2].value = 6;
+            mouseSettings.dpiProfiles[3].value = 8;
+            document.querySelector(`input[name="active-dpi"][value="1"]`).checked = true;
             updateDpiUI();
         }
     }
@@ -2086,11 +2086,11 @@ function loadProfileFromStorage(name) {
     if (!stored) {
         // Handle loading default configurations
         if (name === 'default') {
-            mouseSettings.activeDpi = 0;
-            mouseSettings.dpiProfiles[0].value = 4;
-            mouseSettings.dpiProfiles[1].value = 8;
-            mouseSettings.dpiProfiles[2].value = 12;
-            mouseSettings.dpiProfiles[3].value = 64;
+            mouseSettings.activeDpi = 1;
+            mouseSettings.dpiProfiles[0].value = 2;
+            mouseSettings.dpiProfiles[1].value = 4;
+            mouseSettings.dpiProfiles[2].value = 6;
+            mouseSettings.dpiProfiles[3].value = 8;
         } else if (name === 'fps') {
             mouseSettings.activeDpi = 1;
             mouseSettings.dpiProfiles[1].value = 16; // 3200 DPI
