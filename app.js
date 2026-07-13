@@ -1364,6 +1364,45 @@ document.getElementById('btn-raw-reset').addEventListener('click', () => {
     }
 });
 
+const btnDriverInstall = document.getElementById('btn-driver-install');
+const btnDriverUninstall = document.getElementById('btn-driver-uninstall');
+
+if (btnDriverInstall) {
+    btnDriverInstall.addEventListener('click', async () => {
+        if (confirm("Voulez-vous installer le pilote de souris RawAccel autonome ?")) {
+            showTelemetryToast("Installation du pilote...");
+            try {
+                if (window.__TAURI__) {
+                    const msg = await window.__TAURI__.core.invoke('install_rawaccel_driver');
+                    alert(msg);
+                } else {
+                    alert("Tauri non disponible - Simulation d'installation pilote réussie");
+                }
+            } catch (err) {
+                alert("Erreur d'installation : " + err);
+            }
+        }
+    });
+}
+
+if (btnDriverUninstall) {
+    btnDriverUninstall.addEventListener('click', async () => {
+        if (confirm("Voulez-vous désinstaller le pilote de souris RawAccel ?")) {
+            showTelemetryToast("Désinstallation du pilote...");
+            try {
+                if (window.__TAURI__) {
+                    const msg = await window.__TAURI__.core.invoke('uninstall_rawaccel_driver');
+                    alert(msg);
+                } else {
+                    alert("Tauri non disponible - Simulation de désinstallation pilote réussie");
+                }
+            } catch (err) {
+                alert("Erreur de désinstallation : " + err);
+            }
+        }
+    });
+}
+
 window.addEventListener('resize', () => {
     if (activeTab === 'tab-rawaccel') drawRawaccelChart();
 });
