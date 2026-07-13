@@ -2266,6 +2266,10 @@ function resizeSensorCanvas() {
 }
 
 function drawSensorMonitor() {
+    if (document.hidden || activeTab !== 'tab-sensor-filters') {
+        requestAnimationFrame(drawSensorMonitor);
+        return;
+    }
     if (!sensorCanvas || !sensorCtx) {
         requestAnimationFrame(drawSensorMonitor);
         return;
@@ -2933,6 +2937,10 @@ function resizeDashCanvas() {
 }
 
 function drawDashboardChart() {
+    if (document.hidden || activeTab !== 'tab-dashboard') {
+        requestAnimationFrame(drawDashboardChart);
+        return;
+    }
     if (!dashCanvas || !dashCtx) {
         requestAnimationFrame(drawDashboardChart);
         return;
@@ -3060,29 +3068,33 @@ window.addEventListener('mousemove', () => {
 });
 
 setInterval(() => {
-    const cpuVal = document.getElementById('dash-cpu-val');
-    const ramVal = document.getElementById('dash-ram-val');
-    if (cpuVal) {
-        const cpu = (0.4 + Math.random() * 1.2).toFixed(1);
-        cpuVal.textContent = `${cpu}%`;
-    }
-    if (ramVal) {
-        const ram = Math.round(14 + Math.random() * 6);
-        ramVal.textContent = `${ram} MB`;
-    }
+    if (document.hidden) return;
     
-    // Live Polling rate display
-    const rateVal = pollTimestamps.length;
-    const pollingEl = document.getElementById('dash-polling-rate');
-    if (pollingEl) {
-        if (rateVal > 10) {
-            pollingEl.textContent = `${rateVal} Hz`;
-            pollingEl.style.color = 'var(--color-primary)';
-        } else {
-            const rateSelect = document.getElementById('polling-rate');
-            const selectedRate = rateSelect ? rateSelect.value : '1000';
-            pollingEl.textContent = `${selectedRate} Hz (Stable)`;
-            pollingEl.style.color = 'var(--text-secondary)';
+    if (activeTab === 'tab-dashboard') {
+        const cpuVal = document.getElementById('dash-cpu-val');
+        const ramVal = document.getElementById('dash-ram-val');
+        if (cpuVal) {
+            const cpu = (0.4 + Math.random() * 1.2).toFixed(1);
+            cpuVal.textContent = `${cpu}%`;
+        }
+        if (ramVal) {
+            const ram = Math.round(14 + Math.random() * 6);
+            ramVal.textContent = `${ram} MB`;
+        }
+        
+        // Live Polling rate display
+        const rateVal = pollTimestamps.length;
+        const pollingEl = document.getElementById('dash-polling-rate');
+        if (pollingEl) {
+            if (rateVal > 10) {
+                pollingEl.textContent = `${rateVal} Hz`;
+                pollingEl.style.color = 'var(--color-primary)';
+            } else {
+                const rateSelect = document.getElementById('polling-rate');
+                const selectedRate = rateSelect ? rateSelect.value : '1000';
+                pollingEl.textContent = `${selectedRate} Hz (Stable)`;
+                pollingEl.style.color = 'var(--text-secondary)';
+            }
         }
     }
     
