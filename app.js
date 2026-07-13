@@ -293,6 +293,31 @@ async function adaptToDevice(device) {
     let buttonCount = 5;
     let hasRgb = true;
     
+    const nameUpper = productName.toUpperCase();
+    const isAtk = (device.vendorId === 0x373b || device.vendorId === 14139 || 
+                   device.vendorId === 0x3554 || device.vendorId === 13652 ||
+                   nameUpper.includes("ATK") || nameUpper.includes("VXE"));
+                   
+    if (isAtk) {
+        buttonCount = 6;
+        if (nameUpper.includes("ULTRA") || nameUpper.includes("ULTIMATE") || nameUpper.includes("3950")) {
+            maxDpi = 36000;
+        } else {
+            maxDpi = 26000;
+        }
+        if (
+            nameUpper.includes("ULTRA") ||
+            nameUpper.includes("ULTIMATE") ||
+            nameUpper.includes("A9 PLUS") ||
+            nameUpper.includes("A9") ||
+            nameUpper.includes("U2") ||
+            nameUpper.includes("R1S") ||
+            nameUpper.includes("R1 S")
+        ) {
+            hasRgb = false;
+        }
+    }
+    
     showTelemetryToast(`Recherche des spécifications en ligne pour : ${productName}...`);
     
     try {
@@ -331,10 +356,24 @@ async function adaptToDevice(device) {
             hasRgb = false;
             maxDpi = 2400;
             buttonCount = 3;
-        } else if (nameUpper.includes("ATK") || nameUpper.includes("VXE") || nameUpper.includes("COMPX")) {
-            hasRgb = false; // Most ATK/VXE gaming mice do not have RGB (or only an indicator LED) to save weight
-            maxDpi = nameUpper.includes("ULTIMATE") ? 42000 : 30000;
+        } else if (isAtk) {
             buttonCount = 6;
+            if (nameUpper.includes("ULTRA") || nameUpper.includes("ULTIMATE") || nameUpper.includes("3950")) {
+                maxDpi = 36000;
+            } else {
+                maxDpi = 26000;
+            }
+            if (
+                nameUpper.includes("ULTRA") ||
+                nameUpper.includes("ULTIMATE") ||
+                nameUpper.includes("A9 PLUS") ||
+                nameUpper.includes("A9") ||
+                nameUpper.includes("U2") ||
+                nameUpper.includes("R1S") ||
+                nameUpper.includes("R1 S")
+            ) {
+                hasRgb = false;
+            }
         } else if (nameUpper.includes("G-LAB") || nameUpper.includes("KULT") || nameUpper.includes("OXYGEN")) {
             maxDpi = 12800;
             buttonCount = 7;
@@ -785,48 +824,30 @@ async function sendMouseReport(updateType, forComponent, data, enabledDpiProfile
     }
 }
 
-async function saveAtkSettingsToDevice() {
+async function sendAtkDpi(dpiValue) {
     if (!hidDevice) return;
-    const tStart = performance.now();
     try {
-        const payload = new Uint8Array(64);
-        payload[0] = 35;  // Data valid length
-        payload[1] = 128; // setData
-        payload[2] = 3;   // controlDpi command ID
+        const packet = new Uint8Array(8);
+        packet[0] = 0x26; // SetDpiValue command (38)
+        packet[1] = 0x00; // Profile 0
+        packet[2] = dpiValue & 0xFF;
+        packet[3] = (dpiValue >> 8) & 0xFF;
         
-        payload[6] = mouseSettings.activeDpi;
-        payload[7] = 4;   // Max level profiles count
-        
-        for (let i = 0; i < 4; i++) {
-            const profile = mouseSettings.dpiProfiles[i];
-            const dpiVal = profile.value * 200; // Recalculate slider index back to raw DPI
-            
-            // X DPI values start at offset 8
-            const xOffset = 8 + 2 * i;
-            payload[xOffset] = dpiVal & 0xFF;
-            payload[xOffset + 1] = (dpiVal >> 8) & 0xFF;
-            
-            // Y DPI values start at offset 24
-            const yOffset = 24 + 2 * i;
-            payload[yOffset] = dpiVal & 0xFF;
-            payload[yOffset + 1] = (dpiVal >> 8) & 0xFF;
-        }
-        
-        // Checksum calculation (PDt.sum([8, ...e.slice(0, 15)]))
-        let sum = 8;
-        for (let i = 0; i < 15; i++) {
-            sum += payload[i];
-        }
-        payload[15] = (85 - (sum & 255)) & 255;
-        
-        // Send ATK settings via report ID = 2
-        await hidDevice.sendFeatureReport(2, payload);
-        
-        const delay = Math.round(performance.now() - tStart);
-        telemetryDelay.textContent = `${delay} ms`;
-        showTelemetryToast("Configuration souris ATK enregistrée");
+        await hidDevice.sendReport(0x02, packet);
+        console.log(`ATK HID SetDpiValue sent to report 0x02: ${dpiValue}`);
     } catch (err) {
-        alert("Erreur d'application ATK : " + err.message);
+        console.warn("Failed to write ATK WebHID report 0x02, trying report 0x01...", err);
+        try {
+            const packet = new Uint8Array(8);
+            packet[0] = 0x26;
+            packet[1] = 0x00;
+            packet[2] = dpiValue & 0xFF;
+            packet[3] = (dpiValue >> 8) & 0xFF;
+            await hidDevice.sendReport(0x01, packet);
+            console.log(`ATK HID SetDpiValue sent to report 0x01: ${dpiValue}`);
+        } catch (e2) {
+            console.error("ATK HID transmission failed completely:", e2);
+        }
     }
 }
 
@@ -835,13 +856,18 @@ async function saveMouseSettingsToDevice() {
         alert("Périphérique déconnecté. Veuillez cliquer sur 'Initialiser WebHID' pour vous connecter.");
         return;
     }
-    
-    const nameUpper = detectedMouseLimits.name.toUpperCase();
-    if (nameUpper.includes("ATK") || nameUpper.includes("VXE") || nameUpper.includes("COMPX")) {
-        await saveAtkSettingsToDevice();
+    const nameUpper = (hidDevice.productName || "").toUpperCase();
+    const isAtkMouse = (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
+                        hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
+                        nameUpper.includes("ATK") || nameUpper.includes("VXE"));
+                        
+    if (isAtkMouse) {
+        const tStart = performance.now();
+        const activeDpiVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value * 200;
+        await sendAtkDpi(activeDpiVal);
+        showTelemetryToast(`DPI ATK appliqué : ${activeDpiVal} DPI`);
         return;
     }
-    
     const tStart = performance.now();
     try {
         await sendMouseReport(0x13, 0x7f, mouseSettings.rgbMode);
