@@ -486,13 +486,34 @@ async function connectDevice() {
     try {
         const devices = await navigator.hid.requestDevice({
             filters: [
-                { usagePage: 0x01, usage: 0x02 } // Strictly restrict WebHID pairing dialog to Mouse / Pointer devices
+                { usagePage: 0x01, usage: 0x02 }, // Standard pointer
+                { vendorId: 14139 }, // ATK
+                { vendorId: 13652 }  // VXE
             ]
         });
         if (devices.length === 0) {
             return;
         }
-        let targetDev = devices[0];
+        
+        let targetDev = null;
+        for (const dev of devices) {
+            const nameUpper = (dev.productName || "").toUpperCase();
+            const isAtk = (dev.vendorId === 0x373b || dev.vendorId === 14139 || 
+                           dev.vendorId === 0x3554 || dev.vendorId === 13652 ||
+                           nameUpper.includes("ATK") || nameUpper.includes("VXE"));
+            if (isAtk) {
+                const hasConfig = dev.collections && dev.collections.some(c => c.usagePage === 65284 || c.usagePage === 0xFF04 || c.usagePage >= 0xFF00);
+                if (hasConfig) {
+                    targetDev = dev;
+                    break;
+                }
+            }
+        }
+        
+        if (!targetDev) {
+            targetDev = devices[0];
+        }
+        
         await targetDev.open();
         hidDevice = targetDev;
         onDeviceConnected(hidDevice);
