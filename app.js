@@ -646,7 +646,7 @@ function updateDpiUI() {
 }
 
 document.querySelectorAll('input[name="active-dpi"]').forEach(radio => {
-    radio.addEventListener('change', () => {
+    radio.addEventListener('change', async () => {
         updateDpiUI();
         const nameUpper = (hidDevice?.productName || "").toUpperCase();
         const isAtkMouse = hidDevice && (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
@@ -654,8 +654,9 @@ document.querySelectorAll('input[name="active-dpi"]').forEach(radio => {
                                          nameUpper.includes("ATK") || nameUpper.includes("VXE"));
         if (isAtkMouse) {
             const activeDpiVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value * 200;
-            sendAtkDpi(activeDpiVal);
+            await sendAtkDpi(activeDpiVal);
         }
+        await saveRawaccelSettingsToServer();
     });
 });
 
@@ -672,15 +673,16 @@ dpiSlider.addEventListener('input', (e) => {
     updateDpiUI();
 });
 
-dpiSlider.addEventListener('change', (e) => {
+dpiSlider.addEventListener('change', async (e) => {
+    const val = parseInt(e.target.value);
     const nameUpper = (hidDevice?.productName || "").toUpperCase();
     const isAtkMouse = hidDevice && (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
                                      hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
                                      nameUpper.includes("ATK") || nameUpper.includes("VXE"));
     if (isAtkMouse) {
-        const val = parseInt(e.target.value);
-        sendAtkDpi(val * 200);
+        await sendAtkDpi(val * 200);
     }
+    await saveRawaccelSettingsToServer();
 });
 
 document.querySelectorAll('input[name="rgb-mode"]').forEach(radio => {
