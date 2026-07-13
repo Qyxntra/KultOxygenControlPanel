@@ -316,6 +316,44 @@
                                 <div class="chart-tooltip" id="chart-tooltip-el" style="display: none;"></div>
                             </div>
                         </div>
+
+                        <!-- Widget: Notes de Version & Patchs (Changelog) -->
+                        <div class="card widget-card large-widget" draggable="true" id="widget-changelog" style="grid-column: span 2; margin-top: 10px;">
+                            <h3 class="card-title">Notes de Version & Patchs (Changelog)</h3>
+                            <div class="changelog-container" style="max-height: 250px; overflow-y: auto; padding-right: 8px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
+                                <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.10 (Actuelle)</strong>
+                                        <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Aujourd'hui</span>
+                                    </div>
+                                    <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
+                                        <li><strong>Restauration du bouton Enregistrer</strong> : Le bouton de sauvegarde manuel est de retour pour valider vos choix de manière explicite et éviter les requêtes système spammées.</li>
+                                        <li><strong>Correction du Visualiseur</strong> : Résolution du bug de l'écran noir qui gelait l'onglet Filtres Capteur.</li>
+                                        <li><strong>Angle Snapping Naturel</strong> : Plage de sensibilité réajustée de 0.5° à 15° (au lieu de 5°-30°) et inversion du breakout (Hystérésis) pour une sensation beaucoup plus fluide en jeu.</li>
+                                    </ul>
+                                </div>
+                                <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <strong style="color: var(--color-secondary); font-size: 0.85rem;">Version 0.2.9</strong>
+                                        <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">13 Juillet 2026</span>
+                                    </div>
+                                    <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
+                                        <li>Optimisation drastique de la consommation d'arrière-plan (0% CPU/RAM en mode réduit).</li>
+                                        <li>Mise en place de la sauvegarde automatique d'arrière-plan.</li>
+                                    </ul>
+                                </div>
+                                <div class="changelog-item">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <strong style="color: var(--text-primary); font-size: 0.85rem;">Version 0.2.6</strong>
+                                        <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">13 Juillet 2026</span>
+                                    </div>
+                                    <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
+                                        <li>Ajout du support du noyau RawAccel pour l'Angle Snapping réel en jeu.</li>
+                                        <li>Amélioration de la gestion des multiplicateurs DPI en direct.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -871,8 +909,8 @@
                                     <div class="form-group">
                                         <label for="snap-threshold">Seuil d'Angle (Sensibilité)</label>
                                         <div style="display: flex; align-items: center; gap: 12px;">
-                                            <input type="range" id="snap-threshold" min="5" max="30" step="1" value="15" class="custom-range" style="flex: 1;">
-                                            <span id="snap-threshold-display" class="mono" style="font-size: 0.82rem; min-width: 45px; color: var(--color-primary);">15°</span>
+                                            <input type="range" id="snap-threshold" min="0.5" max="15" step="0.5" value="3" class="custom-range" style="flex: 1;">
+                                            <span id="snap-threshold-display" class="mono" style="font-size: 0.82rem; min-width: 45px; color: var(--color-primary);">3°</span>
                                         </div>
                                     </div>
                                     <div class="form-group">

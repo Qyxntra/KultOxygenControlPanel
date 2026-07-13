@@ -1,11 +1,11 @@
 {
-  "version": "0.2.9",
+  "version": "0.2.10",
   "notes": "Mise à jour : Intégration native de RawAccel par backend Rust, correction du dimensionnement du visualiseur de signal, note sur la stabilité des courbes, et lissage sensoriel (Smoothing) paramétrable.",
   "pub_date": "2026-07-13T12:12:00Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSMW5vVmh0WE9HTzRlSG9HbnBlYktHSzNncU93anVFR0dlelliY29ocVhoTms2TjltS2tjSjJLTmdjeVZSZXNldGZJRmk2MWhJcFNSeUEra3cvY1k3Yklsb1RvVU9YbEFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgzOTc4MjMyCWZpbGU6S3VsdE94eWdlbkNvbnRyb2xQYW5lbF8wLjIuOV94NjQtc2V0dXAuZXhlCjdHemFCdmNjQzBmdS9pd0JCVzNLRTBtcEhPaURjR0JUaFVrUXpZakcrWnVadVYvMExlY0ZkaFdoRHo3bXhpY0laRko0ZXpKb1BiekpTMmF0a3p2aENnPT0K",
-      "url": "https://github.com/Qyxntra/KultOxygenControlPanel/releases/download/v0.2.9/KultOxygenControlPanel_0.2.9_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSMW5vVmh0WE9HTzlMd0JYcDF3T2Zvc1BxdmxuSzk0WFpmZ2xlYnRkWEQxV0RWcWdRLzZqcTVrdSttYzVlY0pQaFdnOEY0aUF1YTRqMkh0UG53UEZuMUUvQS92RkdNeHdBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgzOTc4Nzc0CWZpbGU6S3VsdE94eWdlbkNvbnRyb2xQYW5lbF8wLjIuMTBfeDY0LXNldHVwLmV4ZQpBRkRKV2hSSUMxcytxMnNIVmNmMWhNQWpQYzlsRTgwMWxWdzljdW9STkJ3UlBxTmRMS3R5cnhsWDJianF0M0VOZm5xbVNwcCt1MkZuSXJCemo0T1hDQT09Cg==",
+      "url": "https://github.com/Qyxntra/KultOxygenControlPanel/releases/download/v0.2.10/KultOxygenControlPanel_0.2.10_x64-setup.exe"
     }
   }
 }

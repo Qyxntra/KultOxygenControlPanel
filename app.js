@@ -145,6 +145,9 @@ document.querySelectorAll('.nav-tab').forEach(button => {
                 if (typeof resizeSensorCanvas === 'function') {
                     resizeSensorCanvas();
                 }
+                if (typeof drawSensorMonitor === 'function') {
+                    drawSensorMonitor(); // Resume loop!
+                }
             }, 50);
         } else if (activeTab === 'tab-latency') {
             isAimTabActive = false;
@@ -153,6 +156,15 @@ document.querySelectorAll('.nav-tab').forEach(button => {
             setTimeout(() => {
                 if (typeof initLatencyCanvas === 'function') {
                     initLatencyCanvas();
+                }
+            }, 50);
+        } else if (activeTab === 'tab-dashboard') {
+            isAimTabActive = false;
+            globalApplyBtn.classList.remove('rawaccel-tab-active-btn');
+            globalApplyBtn.textContent = 'Appliquer';
+            setTimeout(() => {
+                if (typeof drawDashboardChart === 'function') {
+                    drawDashboardChart(); // Resume loop!
                 }
             }, 50);
         } else {
@@ -1549,7 +1561,7 @@ async function saveRawaccelSettingsToServer() {
     const angleSnappingEl = document.getElementById('angle-snapping');
     const snapThresholdEl = document.getElementById('snap-threshold');
     const angleSnappingEnabled = angleSnappingEl && angleSnappingEl.checked;
-    const snapAngleVal = snapThresholdEl ? parseFloat(snapThresholdEl.value) : 15;
+    const snapAngleVal = snapThresholdEl ? parseFloat(snapThresholdEl.value) : 3;
     profile["Degrees of angle snapping"] = angleSnappingEnabled ? snapAngleVal : 0;
     
     const params = profile["Whole or horizontal accel parameters"];
@@ -1931,7 +1943,7 @@ if (aimCanvas) {
         // 2. Apply Angle Snapping
         const angleSnappingEnabled = document.getElementById('angle-snapping').checked;
         if (angleSnappingEnabled && (dx !== 0 || dy !== 0)) {
-            const snapAngleVal = parseFloat(document.getElementById('snap-threshold').value) || 15;
+            const snapAngleVal = parseFloat(document.getElementById('snap-threshold').value) || 3;
             const thresholdAngle = snapAngleVal * (Math.PI / 180); // dynamic snapping threshold
             const angle = Math.abs(Math.atan2(dy, dx));
             
@@ -2404,12 +2416,12 @@ if (sensorCanvas) {
         const angleSnappingEnabled = document.getElementById('angle-snapping').checked;
         if (angleSnappingEnabled && (dx !== 0 || dy !== 0)) {
             const snapModeVal = document.getElementById('snap-mode').value || 'hysteresis';
-            const snapAngleVal = parseFloat(document.getElementById('snap-threshold').value) || 15;
+            const snapAngleVal = parseFloat(document.getElementById('snap-threshold').value) || 3;
             const stiffnessVal = parseInt(document.getElementById('snap-stiffness').value) || 6;
             
             if (snapModeVal === 'hysteresis') {
                 const thresholdAngle = snapAngleVal * (Math.PI / 180);
-                const breakout = 25 - stiffnessVal * 1.5;
+                const breakout = 5 + stiffnessVal * 2;
                 
                 if (!window._snapLockState) {
                     window._snapLockState = { axis: null, lockedValue: 0 };
@@ -3159,7 +3171,7 @@ function loadSensorFiltersFromStorage() {
                 snapMode.value = filters.snapMode;
             }
             if (snapSlider) {
-                snapSlider.value = filters.snapThreshold || 15;
+                snapSlider.value = filters.snapThreshold || 3;
                 if (snapDisplay) snapDisplay.textContent = `${snapSlider.value}°`;
             }
             if (snapStiffness) {
@@ -3308,7 +3320,7 @@ if (btnImportProfile && importProfileFile) {
                         snapMode.value = filters.snapMode;
                     }
                     if (snapSlider) {
-                        snapSlider.value = filters.snapThreshold || 15;
+                        snapSlider.value = filters.snapThreshold || 3;
                         if (snapDisplay) snapDisplay.textContent = `${snapSlider.value}°`;
                     }
                     if (snapStiffness) {
@@ -3618,7 +3630,7 @@ if (btnCloseConnModal) {
 }
 
 // ---------------------------------------------------------
-// V0.2.7 OPTIMIZATIONS : Zéro CPU en arrière-plan & Sauvegarde Automatique
+// V0.2.10 OPTIMIZATIONS : Zéro CPU en arrière-plan & Sauvegarde Manuelle Rétablie
 // ---------------------------------------------------------
 
 // Relancer les boucles quand l'onglet redevient actif
@@ -3628,40 +3640,6 @@ document.addEventListener('visibilitychange', () => {
         if (activeTab === 'tab-dashboard') drawDashboardChart();
         if (activeTab === 'tab-rawaccel') drawRawaccelChart();
     }
-});
-
-// Sauvegarde automatique et silencieuse sur tous les champs
-let autoSaveTimeout;
-document.addEventListener('input', (e) => {
-    const isControl = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT';
-    if (!isControl) return;
-    
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = setTimeout(() => {
-        if (activeTab === 'tab-rawaccel') {
-            if (typeof saveRawaccelSettingsToServer === 'function') saveRawaccelSettingsToServer();
-        } else if (activeTab === 'tab-sensor-filters') {
-            if (typeof saveSensorFiltersToStorage === 'function') saveSensorFiltersToStorage();
-        } else {
-            if (typeof saveMouseSettingsToDevice === 'function') saveMouseSettingsToDevice();
-        }
-    }, 400); // Débounce de 400ms pour éviter de spammer lors du drag d'un slider
-});
-
-document.addEventListener('change', (e) => {
-    const isControl = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.type === 'checkbox';
-    if (!isControl) return;
-    
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = setTimeout(() => {
-        if (activeTab === 'tab-rawaccel') {
-            if (typeof saveRawaccelSettingsToServer === 'function') saveRawaccelSettingsToServer();
-        } else if (activeTab === 'tab-sensor-filters') {
-            if (typeof saveSensorFiltersToStorage === 'function') saveSensorFiltersToStorage();
-        } else {
-            if (typeof saveMouseSettingsToDevice === 'function') saveMouseSettingsToDevice();
-        }
-    }, 100);
 });
 
 

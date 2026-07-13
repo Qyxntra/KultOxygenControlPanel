@@ -2028,12 +2028,3 @@ input[type=number] {
     -moz-appearance: textfield;
 }
 
-/* Auto-save Mode: Hide manual action buttons and toasts */
-#global-apply, #global-reset {
-    display: none !important;
-}
-
-#toast-container {
-    display: none !important;
-}
-
