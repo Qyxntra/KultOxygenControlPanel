@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.12";
+        const localVersion = "0.2.13";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -93,8 +93,26 @@ async function checkElectronUpdate() {
             if (updateBanner && installBtn) {
                 updateBanner.style.display = 'flex';
                 installBtn.textContent = `INSTALLER LA V${latest.version}`;
-                installBtn.addEventListener('click', () => {
-                    window.open('https://github.com/Qyxntra/KultOxygenControlPanel/releases');
+                
+                const downloadUrl = latest.platforms && latest.platforms["windows-x86_64"] ? latest.platforms["windows-x86_64"].url : null;
+                
+                installBtn.addEventListener('click', async () => {
+                    installBtn.disabled = true;
+                    installBtn.textContent = "TÉLÉCHARGEMENT...";
+                    showTelemetryToast("Téléchargement de la mise à jour...");
+                    
+                    if (window.electronAPI && downloadUrl) {
+                        try {
+                            const msg = await window.electronAPI.invoke('download-and-install-update', downloadUrl);
+                            showTelemetryToast(msg);
+                        } catch (err) {
+                            installBtn.disabled = false;
+                            installBtn.textContent = "RÉESSAYER";
+                            alert("Erreur de téléchargement : " + err);
+                        }
+                    } else {
+                        window.open(downloadUrl || 'https://github.com/Qyxntra/KultOxygenControlPanel/releases');
+                    }
                 });
             }
         }

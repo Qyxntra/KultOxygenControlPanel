@@ -390,3 +390,71 @@ async function crawlSpecsFromWeb(searchQuery) {
         return { product_name: "Generic USB Mouse", max_dpi: 16000, button_count: 6, has_rgb: true, source: "default" };
     }
 }
+
+// Download update helper
+function downloadFile(url, dest) {
+    const https = require('https');
+    return new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(dest);
+        
+        function get(targetUrl) {
+            https.get(targetUrl, {
+                headers: {
+                    'User-Agent': 'KultOxygenControlPanel-Updater'
+                }
+            }, (response) => {
+                if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                    get(response.headers.location);
+                    return;
+                }
+                
+                if (response.statusCode !== 200) {
+                    reject(new Error(`Failed to download: HTTP ${response.statusCode}`));
+                    return;
+                }
+                
+                response.pipe(file);
+                
+                file.on('finish', () => {
+                    file.close();
+                    resolve();
+                });
+            }).on('error', (err) => {
+                fs.unlink(dest, () => {});
+                reject(err);
+            });
+        }
+        
+        get(url);
+    });
+}
+
+// IPC: Download and execute update installer
+ipcMain.handle('download-and-install-update', async (event, downloadUrl) => {
+    const { spawn } = require('child_process');
+    const os = require('os');
+    try {
+        const tempPath = path.join(os.tmpdir(), 'KultOxygenSetup.exe');
+        console.log(`Downloading update from ${downloadUrl} to ${tempPath}...`);
+        
+        await downloadFile(downloadUrl, tempPath);
+        console.log("Download completed. Launching installer...");
+        
+        // Run installer and exit app
+        const child = spawn(tempPath, [], {
+            detached: true,
+            stdio: 'ignore'
+        });
+        child.unref();
+        
+        setTimeout(() => {
+            app.isQuitting = true;
+            app.quit();
+        }, 1000);
+        
+        return "Mise à jour téléchargée. L'application va se fermer pour installer.";
+    } catch (e) {
+        console.error("Update failed:", e);
+        throw e;
+    }
+});
