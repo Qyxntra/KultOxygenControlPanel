@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.18";
+        const localVersion = "0.2.19";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -530,14 +530,53 @@ function hexToRgb(hex) {
 }
 
 const COMPATIBLE_MICE = [
+    // THE G-LAB
     { id: "30FA:1440", vendorId: 0x30fa, productId: 0x1440, name: "G-LAB Kult Oxygen", brand: "THE G-LAB", maxDpi: 10000, buttonCount: 7, hasRgb: true, color: "#00d2ff", glow: "rgba(0, 210, 255, 0.15)" },
-    { id: "046D:C231", vendorId: 0x046d, productId: 0xc231, name: "Logitech G102/G203 Prodigy", brand: "LOGITECH", maxDpi: 8000, buttonCount: 6, hasRgb: true, color: "#4364F7", glow: "rgba(67, 100, 247, 0.15)" },
-    { id: "046D:C084", vendorId: 0x046d, productId: 0xc084, name: "Logitech G203 Lightsync", brand: "LOGITECH", maxDpi: 8000, buttonCount: 6, hasRgb: true, color: "#4364F7", glow: "rgba(67, 100, 247, 0.15)" },
+    { id: "30FA:1301", vendorId: 0x30fa, productId: 0x1301, name: "G-LAB Kult Nitrogen Core", brand: "THE G-LAB", maxDpi: 10000, buttonCount: 11, hasRgb: true, color: "#ff4757", glow: "rgba(255, 71, 87, 0.15)" },
+    { id: "30FA:1302", vendorId: 0x30fa, productId: 0x1302, name: "G-LAB Kult Radium", brand: "THE G-LAB", maxDpi: 4800, buttonCount: 7, hasRgb: true, color: "#2ed573", glow: "rgba(46, 213, 115, 0.15)" },
+    { id: "30FA:1303", vendorId: 0x30fa, productId: 0x1303, name: "G-LAB Kult Helium", brand: "THE G-LAB", maxDpi: 3200, buttonCount: 6, hasRgb: true, color: "#ffa502", glow: "rgba(255, 165, 2, 0.15)" },
+    { id: "30FA:1304", vendorId: 0x30fa, productId: 0x1304, name: "G-LAB Kult Caesium", brand: "THE G-LAB", maxDpi: 7200, buttonCount: 6, hasRgb: true, color: "#1e90ff", glow: "rgba(30, 144, 255, 0.15)" },
+    { id: "30FA:1305", vendorId: 0x30fa, productId: 0x1305, name: "G-LAB Kult X-Trem", brand: "THE G-LAB", maxDpi: 4800, buttonCount: 6, hasRgb: true, color: "#ff6b81", glow: "rgba(255, 107, 129, 0.15)" },
+    { id: "30FA:1306", vendorId: 0x30fa, productId: 0x1306, name: "G-LAB Kult Promethium", brand: "THE G-LAB", maxDpi: 8200, buttonCount: 6, hasRgb: true, color: "#a29bfe", glow: "rgba(162, 155, 254, 0.15)" },
+    { id: "30FA:1307", vendorId: 0x30fa, productId: 0x1307, name: "G-LAB Kult Elite M150", brand: "THE G-LAB", maxDpi: 26000, buttonCount: 6, hasRgb: true, color: "#ffffff", glow: "rgba(255, 255, 255, 0.15)" },
+    
+    // ATK / VXE
+    { id: "35AF:1001", vendorId: 0x35af, productId: 0x1001, name: "ATK F1 Ultimate", brand: "ATK", maxDpi: 36000, buttonCount: 5, hasRgb: false, color: "#8A2387", glow: "rgba(138, 35, 135, 0.15)" },
+    { id: "35AF:1002", vendorId: 0x35af, productId: 0x1002, name: "ATK F1 Extreme", brand: "ATK", maxDpi: 36000, buttonCount: 5, hasRgb: false, color: "#8A2387", glow: "rgba(138, 35, 135, 0.15)" },
+    { id: "35AF:1003", vendorId: 0x35af, productId: 0x1003, name: "ATK X1 Ultimate", brand: "ATK", maxDpi: 36000, buttonCount: 5, hasRgb: false, color: "#cc0052", glow: "rgba(204, 0, 82, 0.15)" },
+    { id: "35AF:1004", vendorId: 0x35af, productId: 0x1004, name: "VXE R1 SE", brand: "VXE", maxDpi: 10000, buttonCount: 5, hasRgb: false, color: "#e94057", glow: "rgba(233, 64, 87, 0.15)" },
+    { id: "35AF:1005", vendorId: 0x35af, productId: 0x1005, name: "VXE R1 Pro", brand: "VXE", maxDpi: 26000, buttonCount: 5, hasRgb: false, color: "#e94057", glow: "rgba(233, 64, 87, 0.15)" },
+    { id: "35AF:1006", vendorId: 0x35af, productId: 0x1006, name: "VXE Dragonfly F1 Pro", brand: "VXE", maxDpi: 26000, buttonCount: 5, hasRgb: false, color: "#F27121", glow: "rgba(242, 113, 33, 0.15)" },
+    
+    // CORSAIR
+    { id: "1B1C:1B5E", vendorId: 0x1b1c, productId: 0x1b5e, name: "Corsair M65 RGB Elite", brand: "CORSAIR", maxDpi: 18000, buttonCount: 8, hasRgb: true, color: "#ffcc00", glow: "rgba(255, 204, 0, 0.15)" },
+    { id: "1B1C:1B7A", vendorId: 0x1b1c, productId: 0x1b7a, name: "Corsair Sabre RGB Pro", brand: "CORSAIR", maxDpi: 18000, buttonCount: 6, hasRgb: true, color: "#ffcc00", glow: "rgba(255, 204, 0, 0.15)" },
+    { id: "1B1C:1B5C", vendorId: 0x1b1c, productId: 0x1b5c, name: "Corsair Harpoon RGB Pro", brand: "CORSAIR", maxDpi: 12000, buttonCount: 6, hasRgb: true, color: "#ff9900", glow: "rgba(255, 153, 0, 0.15)" },
+    { id: "1B1C:1B5D", vendorId: 0x1b1c, productId: 0x1b5d, name: "Corsair Ironclaw RGB", brand: "CORSAIR", maxDpi: 18000, buttonCount: 10, hasRgb: true, color: "#ffcc00", glow: "rgba(255, 204, 0, 0.15)" },
+    { id: "1B1C:1B5F", vendorId: 0x1b1c, productId: 0x1b5f, name: "Corsair Glaive RGB Pro", brand: "CORSAIR", maxDpi: 18000, buttonCount: 6, hasRgb: true, color: "#ffcc00", glow: "rgba(255, 204, 0, 0.15)" },
+    { id: "1B1C:1B6E", vendorId: 0x1b1c, productId: 0x1b6e, name: "Corsair Dark Core RGB Pro", brand: "CORSAIR", maxDpi: 18000, buttonCount: 8, hasRgb: true, color: "#ff3300", glow: "rgba(255, 51, 0, 0.15)" },
+    { id: "1B1C:1B7B", vendorId: 0x1b1c, productId: 0x1b7b, name: "Corsair Katar Pro XT", brand: "CORSAIR", maxDpi: 18000, buttonCount: 6, hasRgb: true, color: "#ffcc00", glow: "rgba(255, 204, 0, 0.15)" },
+    { id: "1B1C:1B8E", vendorId: 0x1b1c, productId: 0x1b8e, name: "Corsair Scimitar RGB Elite", brand: "CORSAIR", maxDpi: 18000, buttonCount: 17, hasRgb: true, color: "#ffcc00", glow: "rgba(255, 204, 0, 0.15)" },
+    
+    // LOGITECH G
     { id: "046D:C08B", vendorId: 0x046d, productId: 0xc08b, name: "Logitech G502 Hero", brand: "LOGITECH", maxDpi: 25600, buttonCount: 11, hasRgb: true, color: "#0052D4", glow: "rgba(0, 82, 212, 0.15)" },
+    { id: "046D:C08A", vendorId: 0x046d, productId: 0xc08a, name: "Logitech G305 Lightspeed", brand: "LOGITECH", maxDpi: 12000, buttonCount: 6, hasRgb: false, color: "#00d2ff", glow: "rgba(0, 210, 255, 0.15)" },
+    { id: "046D:C084", vendorId: 0x046d, productId: 0xc084, name: "Logitech G203 Lightsync", brand: "LOGITECH", maxDpi: 8000, buttonCount: 6, hasRgb: true, color: "#4364F7", glow: "rgba(67, 100, 247, 0.15)" },
+    { id: "046D:C231", vendorId: 0x046d, productId: 0xc231, name: "Logitech G102/G203 Prodigy", brand: "LOGITECH", maxDpi: 8000, buttonCount: 6, hasRgb: true, color: "#4364F7", glow: "rgba(67, 100, 247, 0.15)" },
+    { id: "046D:C08F", vendorId: 0x046d, productId: 0xc08f, name: "Logitech G403 Hero", brand: "LOGITECH", maxDpi: 25600, buttonCount: 6, hasRgb: true, color: "#0052D4", glow: "rgba(0, 82, 212, 0.15)" },
+    { id: "046D:C091", vendorId: 0x046d, productId: 0xc091, name: "Logitech G903 Hero", brand: "LOGITECH", maxDpi: 25600, buttonCount: 11, hasRgb: true, color: "#0052D4", glow: "rgba(0, 82, 212, 0.15)" },
+    { id: "046D:C085", vendorId: 0x046d, productId: 0xc085, name: "Logitech G Pro Wireless", brand: "LOGITECH", maxDpi: 25600, buttonCount: 8, hasRgb: true, color: "#0052D4", glow: "rgba(0, 82, 212, 0.15)" },
+    { id: "046D:C094", vendorId: 0x046d, productId: 0xc094, name: "Logitech G Pro X Superlight", brand: "LOGITECH", maxDpi: 25600, buttonCount: 5, hasRgb: false, color: "#0052D4", glow: "rgba(0, 82, 212, 0.15)" },
+    { id: "046D:C099", vendorId: 0x046d, productId: 0xc099, name: "Logitech G Pro X Superlight 2", brand: "LOGITECH", maxDpi: 32000, buttonCount: 5, hasRgb: false, color: "#0052D4", glow: "rgba(0, 82, 212, 0.15)" },
+    
+    // RAZER
     { id: "1532:007A", vendorId: 0x1532, productId: 0x007a, name: "Razer DeathAdder Essential", brand: "RAZER", maxDpi: 6400, buttonCount: 5, hasRgb: false, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" },
     { id: "1532:0090", vendorId: 0x1532, productId: 0x0090, name: "Razer Viper Mini", brand: "RAZER", maxDpi: 8500, buttonCount: 6, hasRgb: true, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" },
-    { id: "35AF:1001", vendorId: 0x35af, productId: 0x1001, name: "ATK F1", brand: "ATK", maxDpi: 36000, buttonCount: 5, hasRgb: false, color: "#8A2387", glow: "rgba(138, 35, 135, 0.15)" },
-    { id: "35AF:1002", vendorId: 0x35af, productId: 0x1002, name: "VXE R1", brand: "VXE", maxDpi: 26000, buttonCount: 5, hasRgb: false, color: "#E94057", glow: "rgba(233, 64, 87, 0.15)" }
+    { id: "1532:0084", vendorId: 0x1532, productId: 0x0084, name: "Razer DeathAdder V2", brand: "RAZER", maxDpi: 20000, buttonCount: 8, hasRgb: true, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" },
+    { id: "1532:009C", vendorId: 0x1532, productId: 0x009c, name: "Razer Basilisk V3", brand: "RAZER", maxDpi: 26000, buttonCount: 11, hasRgb: true, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" },
+    { id: "1532:00A6", vendorId: 0x1532, productId: 0x00a6, name: "Razer Viper V2 Pro", brand: "RAZER", maxDpi: 30000, buttonCount: 5, hasRgb: false, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" },
+    { id: "1532:00A5", vendorId: 0x1532, productId: 0x00a5, name: "Razer DeathAdder V3 Pro", brand: "RAZER", maxDpi: 30000, buttonCount: 5, hasRgb: false, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" },
+    { id: "1532:0098", vendorId: 0x1532, productId: 0x0098, name: "Razer Orochi V2", brand: "RAZER", maxDpi: 18000, buttonCount: 6, hasRgb: false, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" }
 ];
 
 function openMouseSelectorModal() {
@@ -629,10 +668,13 @@ async function connectSpecificDevice(vid, pid) {
         if (vid !== undefined && pid !== undefined) {
             filters.push({ vendorId: vid, productId: pid });
         } else {
-            // Default filters if generic clicked
-            filters.push({ vendorId: 0x30fa });
-            filters.push({ vendorId: 14139 });
-            filters.push({ vendorId: 13652 });
+            // Default filters if generic clicked (allows G-LAB, Logitech, Razer, Corsair, ATK, VXE)
+            filters.push({ vendorId: 0x30fa }); // G-LAB
+            filters.push({ vendorId: 0x046d }); // Logitech
+            filters.push({ vendorId: 0x1532 }); // Razer
+            filters.push({ vendorId: 0x1b1c }); // Corsair
+            filters.push({ vendorId: 14139 });  // ATK
+            filters.push({ vendorId: 13652 });  // VXE
         }
         
         const devices = await navigator.hid.requestDevice({ filters });

@@ -14,14 +14,53 @@ const RAWACCEL_UNINSTALLER = path.join(RAWACCEL_DIR, 'uninstaller.exe');
 
 // Map of popular mouse VID/PID
 const MOUSE_DATABASE = {
+    // THE G-LAB
     "30FA:1440": { product_name: "G-LAB Kult Oxygen", max_dpi: 10000, button_count: 7, has_rgb: true },
-    "046D:C231": { product_name: "Logitech G102/G203 Prodigy", max_dpi: 8000, button_count: 6, has_rgb: true },
-    "046D:C084": { product_name: "Logitech G203 Lightsync", max_dpi: 8000, button_count: 6, has_rgb: true },
+    "30FA:1301": { product_name: "G-LAB Kult Nitrogen Core", max_dpi: 10000, button_count: 11, has_rgb: true },
+    "30FA:1302": { product_name: "G-LAB Kult Radium", max_dpi: 4800, button_count: 7, has_rgb: true },
+    "30FA:1303": { product_name: "G-LAB Kult Helium", max_dpi: 3200, button_count: 6, has_rgb: true },
+    "30FA:1304": { product_name: "G-LAB Kult Caesium", max_dpi: 7200, button_count: 6, has_rgb: true },
+    "30FA:1305": { product_name: "G-LAB Kult X-Trem", max_dpi: 4800, button_count: 6, has_rgb: true },
+    "30FA:1306": { product_name: "G-LAB Kult Promethium", max_dpi: 8200, button_count: 6, has_rgb: true },
+    "30FA:1307": { product_name: "G-LAB Kult Elite M150", max_dpi: 26000, button_count: 6, has_rgb: true },
+    
+    // ATK / VXE
+    "35AF:1001": { product_name: "ATK F1 Ultimate", max_dpi: 36000, button_count: 5, has_rgb: false },
+    "35AF:1002": { product_name: "ATK F1 Extreme", max_dpi: 36000, button_count: 5, has_rgb: false },
+    "35AF:1003": { product_name: "ATK X1 Ultimate", max_dpi: 36000, button_count: 5, has_rgb: false },
+    "35AF:1004": { product_name: "VXE R1 SE", max_dpi: 10000, button_count: 5, has_rgb: false },
+    "35AF:1005": { product_name: "VXE R1 Pro", max_dpi: 26000, button_count: 5, has_rgb: false },
+    "35AF:1006": { product_name: "VXE Dragonfly F1 Pro", max_dpi: 26000, button_count: 5, has_rgb: false },
+    
+    // CORSAIR
+    "1B1C:1B5E": { product_name: "Corsair M65 RGB Elite", max_dpi: 18000, button_count: 8, has_rgb: true },
+    "1B1C:1B7A": { product_name: "Corsair Sabre RGB Pro", max_dpi: 18000, button_count: 6, has_rgb: true },
+    "1B1C:1B5C": { product_name: "Corsair Harpoon RGB Pro", max_dpi: 12000, button_count: 6, has_rgb: true },
+    "1B1C:1B5D": { product_name: "Corsair Ironclaw RGB", max_dpi: 18000, button_count: 10, has_rgb: true },
+    "1B1C:1B5F": { product_name: "Corsair Glaive RGB Pro", max_dpi: 18000, button_count: 6, has_rgb: true },
+    "1B1C:1B6E": { product_name: "Corsair Dark Core RGB Pro", max_dpi: 18000, button_count: 8, has_rgb: true },
+    "1B1C:1B7B": { product_name: "Corsair Katar Pro XT", max_dpi: 18000, button_count: 6, has_rgb: true },
+    "1B1C:1B8E": { product_name: "Corsair Scimitar RGB Elite", max_dpi: 18000, button_count: 17, has_rgb: true },
+    
+    // LOGITECH G
     "046D:C08B": { product_name: "Logitech G502 Hero", max_dpi: 25600, button_count: 11, has_rgb: true },
+    "046D:C08A": { product_name: "Logitech G305 Lightspeed", max_dpi: 12000, button_count: 6, has_rgb: false },
+    "046D:C084": { product_name: "Logitech G203 Lightsync", max_dpi: 8000, button_count: 6, has_rgb: true },
+    "046D:C231": { product_name: "Logitech G102/G203 Prodigy", max_dpi: 8000, button_count: 6, has_rgb: true },
+    "046D:C08F": { product_name: "Logitech G403 Hero", max_dpi: 25600, button_count: 6, has_rgb: true },
+    "046D:C091": { product_name: "Logitech G903 Hero", max_dpi: 25600, button_count: 11, has_rgb: true },
+    "046D:C085": { product_name: "Logitech G Pro Wireless", max_dpi: 25600, button_count: 8, has_rgb: true },
+    "046D:C094": { product_name: "Logitech G Pro X Superlight", max_dpi: 25600, button_count: 5, has_rgb: false },
+    "046D:C099": { product_name: "Logitech G Pro X Superlight 2", max_dpi: 32000, button_count: 5, has_rgb: false },
+    
+    // RAZER
     "1532:007A": { product_name: "Razer DeathAdder Essential", max_dpi: 6400, button_count: 5, has_rgb: false },
     "1532:0090": { product_name: "Razer Viper Mini", max_dpi: 8500, button_count: 6, has_rgb: true },
-    "35AF:1001": { product_name: "ATK F1", max_dpi: 36000, button_count: 5, has_rgb: false },
-    "35AF:1002": { product_name: "VXE R1", max_dpi: 26000, button_count: 5, has_rgb: false }
+    "1532:0084": { product_name: "Razer DeathAdder V2", max_dpi: 20000, button_count: 8, has_rgb: true },
+    "1532:009C": { product_name: "Razer Basilisk V3", max_dpi: 26000, button_count: 11, has_rgb: true },
+    "1532:00A6": { product_name: "Razer Viper V2 Pro", max_dpi: 30000, button_count: 5, has_rgb: false },
+    "1532:00A5": { product_name: "Razer DeathAdder V3 Pro", max_dpi: 30000, button_count: 5, has_rgb: false },
+    "1532:0098": { product_name: "Razer Orochi V2", max_dpi: 18000, button_count: 6, has_rgb: false }
 };
 
 // Helper: copy directory recursively
