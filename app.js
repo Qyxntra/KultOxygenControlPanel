@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.20";
+        const localVersion = "0.2.21";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -462,6 +462,11 @@ async function adaptToDevice(device) {
     
     // Update Header status
     statusText.textContent = `${productName.toUpperCase()} CONNECTÉ`;
+    const specsEl = document.getElementById('status-specs');
+    if (specsEl) {
+        specsEl.textContent = `${maxDpi.toLocaleString()} DPI MAX | ${buttonCount} BOUTONS | ${hasRgb ? 'RGB' : 'SANS RGB'}`;
+        specsEl.style.display = 'inline-block';
+    }
     
     // Update DPI slider maximum limit
     const steps = Math.round(maxDpi / 200);
