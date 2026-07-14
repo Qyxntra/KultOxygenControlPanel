@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.22";
+        const localVersion = "0.2.23";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -904,9 +904,12 @@ dpiSlider.addEventListener('change', async (e) => {
                                      nameUpper.includes("ATK") || nameUpper.includes("VXE"));
     if (isAtkMouse) {
         await sendAtkDpi(val * 200);
-    } else if (hidDevice) {
+    } else if (hidDevice && (hidDevice.vendorId === 0x30fa || nameUpper.includes("G-LAB") || nameUpper.includes("KULT"))) {
         await sendGlabActiveDpi();
     }
+    
+    // Automatically apply RawAccel scaling instantly on DPI change
+    await saveRawaccelSettingsToServer();
 });
 
 const physicalDpiInputEl = document.getElementById('physical-mouse-dpi');
@@ -1755,10 +1758,19 @@ async function saveRawaccelSettingsToServer() {
     // Set the normalizer to the physical DPI baseline to ensure RawAccel scales speed proportionally
     rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = physicalDpi;
     
-    // If a programmable HID device is connected (ATK/VXE or G-LAB), the DPI is set directly in hardware.
+    // If a programmable G-LAB or ATK/VXE HID device is connected, the DPI is set directly in hardware.
     // We assume the hardware change succeeded and the mouse is physically at activeDpiVal.
     // Setting the RawAccel normalizer to activeDpiVal prevents double scaling (multiplier becomes 1.0).
-    if (hidDevice) {
+    // For other mice (Logitech, Razer, Corsair, etc.), we normalise to the user's input base DPI.
+    const nameUpper = (hidDevice?.productName || "").toUpperCase();
+    const isHardwareConfigurable = hidDevice && (
+        hidDevice.vendorId === 0x30fa || // G-LAB
+        hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
+        hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
+        nameUpper.includes("G-LAB") || nameUpper.includes("KULT") ||
+        nameUpper.includes("ATK") || nameUpper.includes("VXE")
+    );
+    if (isHardwareConfigurable) {
         rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = activeDpiVal;
     }
 
