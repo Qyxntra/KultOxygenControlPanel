@@ -96,6 +96,32 @@ function createWindow() {
         }
     });
 
+    // Configure WebHID permission checks and device selector handlers
+    mainWindow.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+        if (permission === 'hid') return true;
+        return false;
+    });
+
+    mainWindow.webContents.session.setDevicePermissionHandler((details) => {
+        if (details.deviceType === 'hid') return true;
+        return false;
+    });
+
+    mainWindow.webContents.session.on('select-hid-device', (event, details, callback) => {
+        event.preventDefault();
+        if (details.deviceList && details.deviceList.length > 0) {
+            // Select first G-LAB mouse (vendorId 0x30fa or 12538) if present
+            const glab = details.deviceList.find(d => d.vendorId === 0x30fa || d.vendorId === 12538);
+            if (glab) {
+                callback(glab.deviceId);
+            } else {
+                callback(details.deviceList[0].deviceId);
+            }
+        } else {
+            callback(null);
+        }
+    });
+
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
