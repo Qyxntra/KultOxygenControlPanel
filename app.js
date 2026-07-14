@@ -45,59 +45,99 @@ const globalResetBtn = document.getElementById('global-reset');
 const telemetryStatus = document.getElementById('telemetry-status');
 const telemetryDelay = document.getElementById('telemetry-delay');
 
+// Helper to route IPC commands to Electron, Tauri, or browser simulation
+async function invokeIPC(command, args = {}) {
+    if (window.electronAPI) {
+        if (command === 'read_rawaccel_settings') {
+            return await window.electronAPI.invoke('read-rawaccel-settings');
+        } else if (command === 'write_rawaccel_settings') {
+            return await window.electronAPI.invoke('write-rawaccel-settings', args.settings);
+        } else if (command === 'install_rawaccel_driver') {
+            return await window.electronAPI.invoke('install-rawaccel-driver');
+        } else if (command === 'uninstall_rawaccel_driver') {
+            return await window.electronAPI.invoke('uninstall-rawaccel-driver');
+        } else if (command === 'fetch_mouse_specs_from_web') {
+            return await window.electronAPI.invoke('get-connected-mouse-specs');
+        }
+    } else if (window.__TAURI__) {
+        return await window.__TAURI__.core.invoke(command, args);
+    } else {
+        console.warn(`IPC Invoke simulation for: ${command}`);
+        if (command === 'read_rawaccel_settings') {
+            const res = await fetch('/api/rawaccel/settings');
+            return await res.json();
+        } else if (command === 'write_rawaccel_settings') {
+            return { status: "success", message: "Simulated write success" };
+        } else if (command === 'install_rawaccel_driver') {
+            return "Pilote simulé installé.";
+        } else if (command === 'uninstall_rawaccel_driver') {
+            return "Pilote simulé désinstallé.";
+        } else if (command === 'fetch_mouse_specs_from_web') {
+            return { product_name: "Generic Simulated Mouse", max_dpi: 16000, button_count: 6, has_rgb: true };
+        }
+    }
+}
+
+// Electron Auto-Updater check
+async function checkElectronUpdate() {
+    if (!window.electronAPI) return;
+    try {
+        const localVersion = "0.2.11";
+        const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
+        if (!res.ok) return;
+        const latest = await res.json();
+        if (latest && latest.version !== localVersion) {
+            console.log(`Mise à jour disponible : ${latest.version}`);
+            const updateBanner = document.getElementById('update-banner');
+            const installBtn = document.getElementById('btn-install-update');
+            if (updateBanner && installBtn) {
+                updateBanner.style.display = 'flex';
+                installBtn.textContent = `INSTALLER LA V${latest.version}`;
+                installBtn.addEventListener('click', () => {
+                    window.open('https://github.com/Qyxntra/KultOxygenControlPanel/releases');
+                });
+            }
+        }
+    } catch (e) {
+        console.error("Failed to check update:", e);
+    }
+}
+
 // Tauri Auto-Updater check using Global Tauri API
 async function checkTauriUpdate() {
-    if (!window.__TAURI__) {
-        console.log("Not running inside Tauri.");
+    if (window.electronAPI) {
+        checkElectronUpdate();
         return;
     }
-    
-    // Support both Tauri v1 and v2 global updater paths
+    if (!window.__TAURI__) return;
     const updaterPlugin = window.__TAURI__.updater || (window.__TAURI__.plugins ? window.__TAURI__.plugins.updater : null);
-    if (!updaterPlugin) {
-        console.log("Tauri updater plugin not available globally.");
-        return;
-    }
-    
+    if (!updaterPlugin) return;
     try {
         const { check } = updaterPlugin;
         const update = await check();
-        
         if (update) {
-            console.log(`Update available: ${update.version}`);
             const updateBanner = document.getElementById('update-banner');
             const installBtn = document.getElementById('btn-install-update');
-            
             if (updateBanner && installBtn) {
                 updateBanner.style.display = 'flex';
-                
                 installBtn.addEventListener('click', async () => {
                     installBtn.disabled = true;
                     installBtn.textContent = "INSTALLATION...";
-                    showTelemetryToast("Téléchargement de la mise à jour...");
-                    
                     try {
                         await update.downloadAndInstall();
-                        showTelemetryToast("Relaunching app...");
-                        
                         const processPlugin = window.__TAURI__.process || (window.__TAURI__.plugins ? window.__TAURI__.plugins.process : null);
                         if (processPlugin && processPlugin.relaunch) {
                             await processPlugin.relaunch();
-                        } else {
-                            alert("Mise à jour installée. Veuillez redémarrer l'application.");
                         }
                     } catch (err) {
                         installBtn.disabled = false;
                         installBtn.textContent = "INSTALLER LA MAJ";
-                        alert("Erreur de mise à jour: " + (err && err.message ? err.message : JSON.stringify(err) || err));
                     }
                 });
             }
-        } else {
-            console.log("App is up to date.");
         }
     } catch (err) {
-        console.error("Failed to check for updates:", err);
+        console.error(err);
     }
 }
 
@@ -333,14 +373,12 @@ async function adaptToDevice(device) {
     showTelemetryToast(`Recherche des spécifications en ligne pour : ${productName}...`);
     
     try {
-        if (window.__TAURI__) {
-            const specs = await window.__TAURI__.core.invoke('fetch_mouse_specs_from_web', { productName });
-            if (specs && specs.max_dpi) {
-                maxDpi = specs.max_dpi;
-                buttonCount = specs.button_count;
-                hasRgb = specs.has_rgb;
-                console.log("Specs crawled successfully:", specs);
-            }
+        const specs = await invokeIPC('fetch_mouse_specs_from_web', { productName });
+        if (specs && specs.max_dpi) {
+            maxDpi = specs.max_dpi;
+            buttonCount = specs.button_count;
+            hasRgb = specs.has_rgb;
+            console.log("Specs crawled successfully:", specs);
         }
     } catch (err) {
         console.error("Web crawler failed, falling back to offline heuristics:", err);
@@ -1093,8 +1131,8 @@ btnLockYx.addEventListener('click', () => {
 
 async function fetchRawaccelSettings() {
     try {
-        if (window.__TAURI__) {
-            rawaccelSettings = await window.__TAURI__.core.invoke('read_rawaccel_settings');
+        if (window.electronAPI || window.__TAURI__) {
+            rawaccelSettings = await invokeIPC('read_rawaccel_settings');
         } else {
             const res = await fetch('/api/rawaccel/settings');
             if (!res.ok) throw new Error("Impossible de lire settings.json");
@@ -1578,8 +1616,8 @@ async function saveRawaccelSettingsToServer() {
     profile["Vertical accel parameters"] = JSON.parse(JSON.stringify(params));
     
     try {
-        if (window.__TAURI__) {
-            const data = await window.__TAURI__.core.invoke('write_rawaccel_settings', { settings: rawaccelSettings });
+        if (window.electronAPI || window.__TAURI__) {
+            const data = await invokeIPC('write_rawaccel_settings', { settings: rawaccelSettings });
             const delay = Math.round(performance.now() - tStart);
             telemetryDelay.textContent = `${delay} ms`;
             showTelemetryToast("Paramètres RawAccel appliqués");
@@ -1647,11 +1685,11 @@ if (btnDriverInstall) {
         if (confirm("Voulez-vous installer le pilote de souris RawAccel autonome ?")) {
             showTelemetryToast("Installation du pilote...");
             try {
-                if (window.__TAURI__) {
-                    const msg = await window.__TAURI__.core.invoke('install_rawaccel_driver');
+                if (window.electronAPI || window.__TAURI__) {
+                    const msg = await invokeIPC('install_rawaccel_driver');
                     alert(msg);
                 } else {
-                    alert("Tauri non disponible - Simulation d'installation pilote réussie");
+                    alert("Simulation d'installation pilote réussie");
                 }
             } catch (err) {
                 alert("Erreur d'installation : " + err);
@@ -1665,11 +1703,11 @@ if (btnDriverUninstall) {
         if (confirm("Voulez-vous désinstaller le pilote de souris RawAccel ?")) {
             showTelemetryToast("Désinstallation du pilote...");
             try {
-                if (window.__TAURI__) {
-                    const msg = await window.__TAURI__.core.invoke('uninstall_rawaccel_driver');
+                if (window.electronAPI || window.__TAURI__) {
+                    const msg = await invokeIPC('uninstall_rawaccel_driver');
                     alert(msg);
                 } else {
-                    alert("Tauri non disponible - Simulation de désinstallation pilote réussie");
+                    alert("Simulation de désinstallation pilote réussie");
                 }
             } catch (err) {
                 alert("Erreur de désinstallation : " + err);
@@ -1682,9 +1720,92 @@ window.addEventListener('resize', () => {
     if (activeTab === 'tab-rawaccel') drawRawaccelChart();
 });
 
+// Auto-detection of connected mouse specs on startup
+async function autoDetectConnectedMouse() {
+    try {
+        let specs = null;
+        if (window.electronAPI) {
+            specs = await window.electronAPI.invoke('get-connected-mouse-specs');
+        }
+        
+        if (specs && specs.product_name && specs.product_name !== "Generic Mouse") {
+            console.log("Auto-detected mouse specs on startup:", specs);
+            
+            // Adapt device info
+            adaptToDevice({
+                productName: specs.product_name,
+                vendorId: 0,
+                productId: 0
+            });
+            
+            // Further UI adaptation
+            detectedMouseLimits.maxDpi = specs.max_dpi;
+            detectedMouseLimits.buttonCount = specs.button_count;
+            
+            // Adjust RGB tab visibility
+            const rgbTabButton = document.querySelector('.nav-tab[data-tab="tab-rgb"]');
+            if (rgbTabButton) {
+                if (specs.has_rgb) {
+                    rgbTabButton.style.display = 'flex';
+                } else {
+                    rgbTabButton.style.display = 'none';
+                    if (activeTab === 'tab-rgb') {
+                        triggerTabSwitch('tab-dashboard');
+                    }
+                }
+            }
+            
+            // Adjust DPI limits
+            const steps = Math.round(specs.max_dpi / 200);
+            dpiSlider.max = steps;
+            document.getElementById('dpi-mid-label').textContent = `${Math.round(specs.max_dpi / 2)} DPI`;
+            document.getElementById('dpi-max-label').textContent = `${specs.max_dpi} DPI`;
+            
+            // If mouse connected is G-Lab or in our DB, we can mark it as connected
+            statusText.textContent = `${specs.product_name.toUpperCase()} CONNECTÉ`;
+            deviceStatus.className = 'status-badge connected';
+            deviceStatus.querySelector('.status-dot').style.background = 'var(--color-success)';
+            deviceStatus.querySelector('span').textContent = 'CONNECTÉ';
+            connectBtn.textContent = 'Souris Connectée';
+            connectBtn.classList.add('connected');
+            
+            const widgetConnectBtn = document.getElementById('widget-connect-btn');
+            if (widgetConnectBtn) {
+                widgetConnectBtn.textContent = 'Souris Connectée';
+                widgetConnectBtn.style.background = 'rgba(13, 245, 211, 0.15)';
+                widgetConnectBtn.style.color = 'var(--color-primary)';
+                widgetConnectBtn.style.border = '1px solid var(--color-primary)';
+                widgetConnectBtn.style.boxShadow = 'none';
+            }
+            
+            const connectionText = document.getElementById('connection-widget-text');
+            if (connectionText) {
+                connectionText.textContent = `${specs.product_name} - Détecté sur le système (ACTIF)`;
+                connectionText.style.color = 'var(--color-success)';
+            }
+            
+            const connIcon = document.getElementById('connection-icon');
+            if (connIcon) {
+                connIcon.style.fill = 'var(--color-success)';
+            }
+            
+            const ping1 = document.getElementById('radar-ping-1');
+            const ping2 = document.getElementById('radar-ping-2');
+            if (ping1) ping1.style.display = 'none';
+            if (ping2) ping2.style.display = 'none';
+        } else {
+            console.log("No specific mouse detected on startup, falling back to default Kult Oxygen specs.");
+            adaptToDevice({ productName: "G-LAB Kult Oxygen", vendorId: 0x30fa, productId: 0x1440 });
+        }
+    } catch (e) {
+        console.error("Auto-detection failed:", e);
+    }
+}
+
 // Init
 updateDpiUI();
 fetchRawaccelSettings();
+autoDetectConnectedMouse();
 console.log("Professional Dashboard Initialized.");
 
 // ==========================================

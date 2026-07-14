@@ -1,0 +1,44 @@
+{
+  "name": "kult-oxygen-control-panel",
+  "version": "0.2.11",
+  "description": "Kult Oxygen Control Panel - Advanced Mouse Tuning Utility",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "author": "Qyxntra",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^30.0.9",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.glab.kultoxygen.controlpanel",
+    "productName": "KultOxygenControlPanel",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "src-tauri/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "runAfterFinish": true
+    },
+    "extraResources": [
+      {
+        "from": "src-tauri/rawaccel",
+        "to": "rawaccel",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}
