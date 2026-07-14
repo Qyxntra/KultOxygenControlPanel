@@ -370,12 +370,29 @@ async function crawlSpecsFromWeb(searchQuery) {
         // 3. RGB checking
         const hasRgb = htmlUpper.includes("RGB") || htmlUpper.includes("CHROMA") || htmlUpper.includes("LIGHTSYNC") || htmlUpper.includes("BACKLIT");
 
-        // Try to fetch a human-readable title for the device from the web page snippets
-        let productName = searchQuery;
-        const titleMatch = html.match(/<a class="result__url"[^>]*>([^<]+)<\/a>/i);
-        if (titleMatch) {
-            const cleaned = titleMatch[1].replace(/https?:\/\/(www\.)?/, '').split('/')[0];
-            productName = `Mouse (${cleaned})`;
+        // Try to fetch a human-readable title for the device from the web page snippets, avoiding generic tool domains
+        const DOMAIN_BLACKLIST = [
+            'codertools.net', 'github.com', 'reddit.com', 'amazon', 'ebay', 'wikipedia',
+            'youtube', 'facebook', 'twitter', 'aliexpress', 'duckduckgo', 'google',
+            'microsoft', 'apple', 'driver', 'solvusoft', 'catalog', 'device', 'usb-ids',
+            'keyboard', 'tester', 'benchmark', 'passmark', 'userbenchmark', 'codertool'
+        ];
+        
+        let productName = null;
+        const urlMatches = [...html.matchAll(/<a class="result__url"[^>]*>([\s\S]*?)<\/a>/gi)];
+        
+        for (const m of urlMatches) {
+            const rawUrl = m[1].trim().toLowerCase();
+            const domain = rawUrl.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
+            const isBlacklisted = DOMAIN_BLACKLIST.some(b => domain.includes(b));
+            if (!isBlacklisted && domain.length > 2) {
+                productName = `Mouse (${domain.toUpperCase()})`;
+                break;
+            }
+        }
+        
+        if (!productName) {
+            productName = `Generic HID Mouse (${searchQuery})`;
         }
 
         return {

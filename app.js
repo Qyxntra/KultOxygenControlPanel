@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.14";
+        const localVersion = "0.2.15";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -554,7 +554,7 @@ async function connectDevice() {
     try {
         const devices = await navigator.hid.requestDevice({
             filters: [
-                { usagePage: 0x01, usage: 0x02 }, // Standard pointer
+                { vendorId: 0x30fa }, // G-LAB Kult Oxygen
                 { vendorId: 14139 }, // ATK
                 { vendorId: 13652 }  // VXE
             ]
