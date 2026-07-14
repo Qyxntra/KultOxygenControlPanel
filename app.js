@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.19";
+        const localVersion = "0.2.20";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -492,6 +492,25 @@ async function adaptToDevice(device) {
     }
     
     showTelemetryToast(`Profil détecté : ${productName} (${hasRgb ? 'RGB Actif' : 'Sans RGB'}, Max DPI : ${maxDpi})`);
+    
+    // Synchronize CSS custom property (primary color & glow) based on brand/mouse
+    let brandColor = "#00d2ff"; // Default G-LAB Cyan
+    if (matchedSpec) {
+        brandColor = matchedSpec.color;
+    } else {
+        const nameUpper = productName.toUpperCase();
+        if (nameUpper.includes("LOGITECH")) brandColor = "#0052D4";
+        else if (nameUpper.includes("RAZER")) brandColor = "#00ff87";
+        else if (nameUpper.includes("CORSAIR")) brandColor = "#ffcc00";
+        else if (nameUpper.includes("STEELSERIES")) brandColor = "#ff5252";
+        else if (nameUpper.includes("ATK") || nameUpper.includes("VXE")) brandColor = "#8A2387";
+        else if (nameUpper.includes("ASUS") || nameUpper.includes("ROG")) brandColor = "#e84118";
+        else if (nameUpper.includes("HYPERX")) brandColor = "#ff4757";
+        else if (nameUpper.includes("MSI") || nameUpper.includes("REDRAGON")) brandColor = "#ff3f34";
+    }
+    const brandRGB = hexToRgb(brandColor) || "0, 210, 255";
+    document.documentElement.style.setProperty('--color-primary', brandColor);
+    document.documentElement.style.setProperty('--color-primary-rgb', brandRGB);
 }
 
 function revertToDefaultDevice() {
@@ -515,6 +534,10 @@ function revertToDefaultDevice() {
     
     rebuildButtonMappingUI(7);
     adjustSvgBlueprint(7);
+    
+    // Revert CSS variables to G-LAB defaults
+    document.documentElement.style.setProperty('--color-primary', '#00d2ff');
+    document.documentElement.style.setProperty('--color-primary-rgb', '0, 210, 255');
 }
 
 function hexToRgb(hex) {
