@@ -49,7 +49,7 @@ function initRawaccelDirectory() {
         // Find source files from resources
         const srcPath = app.isPackaged 
             ? path.join(process.resourcesPath, 'rawaccel')
-            : path.join(__dirname, 'src-tauri', 'rawaccel');
+            : path.join(__dirname, 'rawaccel');
             
         if (fs.existsSync(srcPath) && !fs.existsSync(RAWACCEL_WRITER)) {
             copyFolderSync(srcPath, RAWACCEL_DIR);
@@ -77,7 +77,7 @@ function createWindow() {
         height: 600,
         resizable: true,
         show: !isMinimized,
-        icon: path.join(__dirname, 'src-tauri', 'icons', 'icon.ico'),
+        icon: path.join(__dirname, 'assets', 'icon.ico'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -103,7 +103,7 @@ function createWindow() {
 
 // Create the tray menu
 function createTray() {
-    const iconPath = path.join(__dirname, 'src-tauri', 'icons', 'icon.ico');
+    const iconPath = path.join(__dirname, 'assets', 'icon.ico');
     if (!fs.existsSync(iconPath)) return;
     
     tray = new Tray(iconPath);

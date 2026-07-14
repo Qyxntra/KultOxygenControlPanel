@@ -1,0 +1,83 @@
+{
+  "### Accel modes ###": "classic | jump | natural | synchronous | power | lut | noaccel",
+  "### Cap modes ###": "in_out | input | output",
+  "defaultDeviceConfig": {
+    "DPI (normalizes input speed unit: counts/ms -> in/s)": 0,
+    "Polling rate Hz (keep at 0 for automatic adjustment)": 0,
+    "Use constant time interval based on polling rate": false,
+    "disable": false
+  },
+  "devices": [],
+  "profiles": [
+    {
+      "Degrees of angle snapping": 0,
+      "Degrees of rotation": 0,
+      "Input Speed Cap": 0,
+      "Input speed calculation parameters": {
+        "Time in ms after which an input is weighted at half its original value.": 0,
+        "Time in ms after which an output is weighted at half its original value.": 0,
+        "Time in ms after which scale is weighted at half its original value.": 0,
+        "Whole/combined accel (set false for 'by component' mode)": true,
+        "lpNorm": 2
+      },
+      "L/R output DPI ratio (left sens multiplier)": 1,
+      "Output DPI": 1000,
+      "Stretches accel range for horizontal vs vertical inputs": {
+        "x": 1,
+        "y": 1
+      },
+      "Stretches domain for horizontal vs vertical inputs": {
+        "x": 1,
+        "y": 1
+      },
+      "U/D output DPI ratio (up sens multiplier)": 1,
+      "Vertical accel parameters": {
+        "Cap / Jump": {
+          "x": 15,
+          "y": 1.8
+        },
+        "Cap mode": "output",
+        "Gain / Velocity": true,
+        "acceleration": 0.025,
+        "data": [],
+        "decayRate": 0.1,
+        "exponentClassic": 2,
+        "exponentPower": 0.05,
+        "gamma": 1,
+        "inputOffset": 0.3,
+        "limit": 1.8,
+        "mode": "classic",
+        "motivity": 1.5,
+        "outputOffset": 0,
+        "scale": 1,
+        "smooth": 0.5,
+        "syncSpeed": 5
+      },
+      "Whole or horizontal accel parameters": {
+        "Cap / Jump": {
+          "x": 15,
+          "y": 1.8
+        },
+        "Cap mode": "output",
+        "Gain / Velocity": true,
+        "acceleration": 0.025,
+        "data": [],
+        "decayRate": 0.1,
+        "exponentClassic": 2,
+        "exponentPower": 0.05,
+        "gamma": 1,
+        "inputOffset": 0.3,
+        "limit": 1.8,
+        "mode": "classic",
+        "motivity": 1.5,
+        "outputOffset": 0,
+        "scale": 1,
+        "smooth": 0.5,
+        "syncSpeed": 5
+      },
+      "Y/X output DPI ratio (vertical sens multiplier)": 1,
+      "name": "default"
+    }
+  ],
+  "version": "1.7.0"
+}

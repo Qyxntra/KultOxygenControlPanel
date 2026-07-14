@@ -23,7 +23,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "src-tauri/icons/icon.ico"
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -33,7 +33,7 @@
     },
     "extraResources": [
       {
-        "from": "src-tauri/rawaccel",
+        "from": "rawaccel",
         "to": "rawaccel",
         "filter": [
           "**/*"
