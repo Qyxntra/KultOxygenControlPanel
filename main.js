@@ -324,10 +324,14 @@ ipcMain.handle('get-connected-mouse-specs', async () => {
                     return;
                 }
 
-                // Run DuckDuckGo web crawl search for this VID/PID
-                console.log(`Crawling DuckDuckGo for specs of: ${rawVidPid}`);
-                const specs = await crawlSpecsFromWeb(rawVidPid);
-                resolve(specs);
+                // Resolve directly using default specs without performing web crawls
+                resolve({
+                    product_name: `Mouse (${rawVidPid})`,
+                    max_dpi: 16000,
+                    button_count: 6,
+                    has_rgb: true,
+                    source: "default"
+                });
             } catch (e) {
                 console.error("Error parsing mouse devices WMI:", e);
                 resolve(matchedSpecs);
@@ -335,78 +339,6 @@ ipcMain.handle('get-connected-mouse-specs', async () => {
         });
     });
 });
-
-// Crawl DuckDuckGo for mouse specs
-async function crawlSpecsFromWeb(searchQuery) {
-    try {
-        const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQuery + " mouse specs dpi rgb buttons")}`;
-        const res = await fetch(url, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            }
-        });
-        if (!res.ok) throw new Error("Fetch failed");
-        
-        const html = await res.text();
-        const htmlUpper = html.toUpperCase();
-        
-        // 1. DPI parsing
-        let maxDpi = 16000;
-        let dpiMatch = htmlUpper.match(/(\d+)\s*DPI/);
-        if (dpiMatch) {
-            const val = parseInt(dpiMatch[1]);
-            if (val >= 400 && val <= 36000) maxDpi = val;
-        }
-
-        // 2. Buttons parsing
-        let buttons = 6;
-        let btnMatch = htmlUpper.match(/(\d+)\s*BUTTON/);
-        if (!btnMatch) btnMatch = htmlUpper.match(/(\d+)\s*BOUTON/);
-        if (btnMatch) {
-            const val = parseInt(btnMatch[1]);
-            if (val >= 2 && val <= 20) buttons = val;
-        }
-
-        // 3. RGB checking
-        const hasRgb = htmlUpper.includes("RGB") || htmlUpper.includes("CHROMA") || htmlUpper.includes("LIGHTSYNC") || htmlUpper.includes("BACKLIT");
-
-        // Try to fetch a human-readable title for the device from the web page snippets, avoiding generic tool domains
-        const DOMAIN_BLACKLIST = [
-            'codertools.net', 'github.com', 'reddit.com', 'amazon', 'ebay', 'wikipedia',
-            'youtube', 'facebook', 'twitter', 'aliexpress', 'duckduckgo', 'google',
-            'microsoft', 'apple', 'driver', 'solvusoft', 'catalog', 'device', 'usb-ids',
-            'keyboard', 'tester', 'benchmark', 'passmark', 'userbenchmark', 'codertool'
-        ];
-        
-        let productName = null;
-        const urlMatches = [...html.matchAll(/<a class="result__url"[^>]*>([\s\S]*?)<\/a>/gi)];
-        
-        for (const m of urlMatches) {
-            const rawUrl = m[1].trim().toLowerCase();
-            const domain = rawUrl.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
-            const isBlacklisted = DOMAIN_BLACKLIST.some(b => domain.includes(b));
-            if (!isBlacklisted && domain.length > 2) {
-                productName = `Mouse (${domain.toUpperCase()})`;
-                break;
-            }
-        }
-        
-        if (!productName) {
-            productName = `Generic HID Mouse (${searchQuery})`;
-        }
-
-        return {
-            product_name: productName,
-            max_dpi: maxDpi,
-            button_count: buttons,
-            has_rgb: hasRgb,
-            source: "crawler"
-        };
-    } catch (e) {
-        console.error("DDG crawl failed:", e);
-        return { product_name: "Generic USB Mouse", max_dpi: 16000, button_count: 6, has_rgb: true, source: "default" };
-    }
-}
 
 // Download update helper
 function downloadFile(url, dest) {
