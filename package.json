@@ -19,6 +19,14 @@
     "directories": {
       "output": "dist-electron"
     },
+    "files": [
+      "assets/**/*",
+      "main.js",
+      "preload.js",
+      "app.js",
+      "index.html",
+      "index.css"
+    ],
     "win": {
       "target": [
         "nsis"
