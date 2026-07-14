@@ -457,28 +457,29 @@ function downloadFile(url, dest) {
 
 // IPC: Download and execute update installer
 ipcMain.handle('download-and-install-update', async (event, downloadUrl) => {
-    const { spawn } = require('child_process');
+    const { exec } = require('child_process');
     const os = require('os');
     try {
-        const tempPath = path.join(os.tmpdir(), 'KultOxygenSetup.exe');
+        const tempPath = path.join(os.tmpdir(), `KultOxygenSetup_${Date.now()}.exe`);
         console.log(`Downloading update from ${downloadUrl} to ${tempPath}...`);
         
         await downloadFile(downloadUrl, tempPath);
         console.log("Download completed. Launching installer...");
         
-        // Run installer and exit app
-        const child = spawn(tempPath, [], {
-            detached: true,
-            stdio: 'ignore'
+        // Launch installer with administrator privileges (UAC prompt)
+        const cmd = `powershell -NoProfile -Command "Start-Process -FilePath '${tempPath}' -Verb RunAs"`;
+        exec(cmd, (err) => {
+            if (err) {
+                console.error("Failed to run elevated installer:", err);
+            }
         });
-        child.unref();
         
         setTimeout(() => {
             app.isQuitting = true;
             app.quit();
-        }, 1000);
+        }, 1500);
         
-        return "Mise à jour téléchargée. L'application va se fermer pour installer.";
+        return "Mise à jour téléchargée. L'application va se fermer pour lancer l'installateur.";
     } catch (e) {
         console.error("Update failed:", e);
         throw e;
