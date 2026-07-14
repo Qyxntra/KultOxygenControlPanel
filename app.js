@@ -596,6 +596,8 @@ async function connectDevice() {
 
 function onDeviceConnected(device) {
     deviceStatus.className = 'status-badge connected';
+    deviceStatus.querySelector('.status-dot').style.background = 'var(--color-success)';
+    statusText.textContent = `${(device.productName || "G-LAB KULT OXYGEN").toUpperCase()} CONNECTÉ`;
     connectBtn.textContent = 'Déconnecter';
     connectBtn.classList.add('connected');
     
@@ -637,6 +639,8 @@ function onDeviceConnected(device) {
 function onDeviceDisconnected() {
     hidDevice = null;
     deviceStatus.className = 'status-badge disconnected';
+    deviceStatus.querySelector('.status-dot').style.background = 'var(--color-error)';
+    statusText.textContent = 'PÉRIPHÉRIQUE DÉCONNECTÉ';
     connectBtn.textContent = 'Connecter la Souris';
     connectBtn.classList.remove('connected');
     
@@ -1795,26 +1799,26 @@ async function autoDetectConnectedMouse() {
             document.getElementById('dpi-mid-label').textContent = `${Math.round(specs.max_dpi / 2)} DPI`;
             document.getElementById('dpi-max-label').textContent = `${specs.max_dpi} DPI`;
             
-            // If mouse connected is G-Lab or in our DB, we can mark it as connected
-            statusText.textContent = `${specs.product_name.toUpperCase()} CONNECTÉ`;
-            deviceStatus.className = 'status-badge connected';
-            deviceStatus.querySelector('.status-dot').style.background = 'var(--color-success)';
-            connectBtn.textContent = 'Souris Connectée';
-            connectBtn.classList.add('connected');
+            // If mouse connected is G-Lab or in our DB, we can mark it as detected (but not fully associated via WebHID yet)
+            statusText.textContent = `${specs.product_name.toUpperCase()} DÉTECTÉ (NON ASSOCIÉ)`;
+            deviceStatus.className = 'status-badge disconnected';
+            deviceStatus.querySelector('.status-dot').style.background = '#ff9f43'; // orange/yellow dot
+            connectBtn.textContent = 'Connecter la Souris';
+            connectBtn.classList.remove('connected');
             
             const widgetConnectBtn = document.getElementById('widget-connect-btn');
             if (widgetConnectBtn) {
-                widgetConnectBtn.textContent = 'Souris Connectée';
-                widgetConnectBtn.style.background = 'rgba(13, 245, 211, 0.15)';
-                widgetConnectBtn.style.color = 'var(--color-primary)';
-                widgetConnectBtn.style.border = '1px solid var(--color-primary)';
-                widgetConnectBtn.style.boxShadow = 'none';
+                widgetConnectBtn.textContent = 'Connecter la Souris';
+                widgetConnectBtn.style.background = 'linear-gradient(135deg, var(--color-primary), #00a2ff)';
+                widgetConnectBtn.style.color = '#000';
+                widgetConnectBtn.style.border = 'none';
+                widgetConnectBtn.style.boxShadow = '0 4px 12px rgba(0, 210, 255, 0.2)';
             }
             
             const connectionText = document.getElementById('connection-widget-text');
             if (connectionText) {
-                connectionText.textContent = `${specs.product_name} - Détecté sur le système (ACTIF)`;
-                connectionText.style.color = 'var(--color-success)';
+                connectionText.textContent = `${specs.product_name} - Détecté (En attente d'association)`;
+                connectionText.style.color = '#ff9f43';
             }
             
             const connIcon = document.getElementById('connection-icon');
