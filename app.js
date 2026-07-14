@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.13";
+        const localVersion = "0.2.14";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -1012,29 +1012,9 @@ async function sendGlabActiveDpi() {
     }
 }
 
-async function autoConnectWebHID() {
-    try {
-        if (!navigator.hid) return;
-        const devices = await navigator.hid.getDevices();
-        const paired = devices.find(d => d.vendorId === 0x30fa && d.productId === 0x1440);
-        if (paired) {
-            await paired.open();
-            hidDevice = paired;
-            console.log("Automatically connected to G-LAB mouse via WebHID:", paired.productName);
-            onDeviceConnected(paired);
-        }
-    } catch (e) {
-        console.error("Auto-connect WebHID failed:", e);
-    }
-}
-
 async function saveMouseSettingsToDevice() {
     if (!hidDevice) {
-        await autoConnectWebHID();
-    }
-    if (!hidDevice) {
-        localStorage.setItem('glab_mouse_settings', JSON.stringify(mouseSettings));
-        showTelemetryToast("Config sauvegardée localement (WebHID inactif)");
+        alert("Périphérique déconnecté. Veuillez cliquer sur 'Connecter la Souris' en haut à droite pour vous connecter.");
         return;
     }
     const nameUpper = (hidDevice.productName || "").toUpperCase();
@@ -1843,7 +1823,6 @@ async function autoDetectConnectedMouse() {
 updateDpiUI();
 fetchRawaccelSettings();
 autoDetectConnectedMouse();
-autoConnectWebHID();
 console.log("Professional Dashboard Initialized.");
 
 // ==========================================
