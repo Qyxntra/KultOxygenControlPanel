@@ -1012,6 +1012,22 @@ async function sendGlabActiveDpi() {
     }
 }
 
+async function autoConnectWebHID() {
+    try {
+        if (!navigator.hid) return;
+        const devices = await navigator.hid.getDevices();
+        const paired = devices.find(d => d.vendorId === 0x30fa && d.productId === 0x1440);
+        if (paired) {
+            await paired.open();
+            hidDevice = paired;
+            console.log("Automatically connected to G-LAB mouse via WebHID:", paired.productName);
+            onDeviceConnected(paired);
+        }
+    } catch (e) {
+        console.error("Auto-connect WebHID failed:", e);
+    }
+}
+
 async function saveMouseSettingsToDevice() {
     if (!hidDevice) {
         alert("Périphérique déconnecté. Veuillez cliquer sur 'Connecter la Souris' en haut à droite pour vous connecter.");
@@ -1823,6 +1839,7 @@ async function autoDetectConnectedMouse() {
 updateDpiUI();
 fetchRawaccelSettings();
 autoDetectConnectedMouse();
+autoConnectWebHID();
 console.log("Professional Dashboard Initialized.");
 
 // ==========================================
