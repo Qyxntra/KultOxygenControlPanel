@@ -1368,31 +1368,29 @@
         </div>
 
         <!-- Beautiful Custom Connection Instruction Modal -->
+        <!-- Beautiful Custom Mouse Selector Modal -->
         <div id="connection-modal" class="custom-modal-overlay" style="display: none;">
-            <div class="custom-modal-card">
+            <div class="custom-modal-card select-mouse-modal-card">
                 <div class="custom-modal-glow"></div>
                 <div class="custom-modal-header">
-                    <h3>Association WebHID G-LAB</h3>
+                    <h3>Sélecteur de Souris Esports</h3>
                     <button id="btn-close-connection-modal" class="custom-modal-close-btn">&times;</button>
                 </div>
-                <div class="custom-modal-body">
-                    <div class="modal-radar-container">
-                        <div class="modal-radar-ping"></div>
-                        <div class="modal-radar-ping-slow"></div>
-                        <div class="modal-radar-core">
-                            <svg viewBox="0 0 24 24" class="modal-mouse-icon"><path d="M13 10V3c0-1.1-.9-2-2-2H9C7.9 1 7 1.9 7 3v7H5c-1.1 0-2 .9-2 2v3c0 3.9 3.1 7 7 7h2c3.9 0 7-3.1 7-7v-3c0-1.1-.9-2-2-2h-2zm-4-7h2v5H9V3zm6 12c0 2.8-2.2 5-5 5h-2c-2.8 0-5-2.2-5-5v-3h12v3z" fill="currentColor"/></svg>
-                        </div>
+                <div class="custom-modal-body select-mouse-modal-body">
+                    <div class="search-container">
+                        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/></svg>
+                        <input type="text" id="mouse-search-input" placeholder="Rechercher votre modèle de souris (ex: G-LAB, Logitech...)" autocomplete="off">
                     </div>
-                    <div class="modal-instruction-steps">
-                        <p class="modal-instruction-title">Une fenêtre d'autorisation s'ouvre :</p>
-                        <ol>
-                            <li>Sélectionnez la ligne <strong style="color: var(--color-primary);">"USB GAMING MOUSE"</strong> ou <strong style="color: var(--color-secondary);">"Unknown Device (1B1C:1BF0)"</strong>.</li>
-                            <li>Cliquez ensuite sur le bouton <strong style="color: var(--color-primary);">"Connecter"</strong>.</li>
-                        </ol>
+                    
+                    <div id="mouse-selection-grid" class="mouse-selection-grid">
+                        <!-- Mouse Cards will be generated dynamically in JS -->
                     </div>
                 </div>
                 <div class="custom-modal-footer">
-                    <p class="modal-help-note">Cette étape est requise pour communiquer les profils de sensibilité et d'éclairage directement au processeur de votre souris G-LAB.</p>
+                    <button id="btn-generic-usb-connect" class="btn secondary-btn select-generic-btn">
+                        <svg viewBox="0 0 24 24" class="btn-icon" style="width: 18px; height: 18px; fill: currentColor; margin-right: 6px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+                        Autre périphérique USB / Souris générique
+                    </button>
                 </div>
             </div>
         </div>

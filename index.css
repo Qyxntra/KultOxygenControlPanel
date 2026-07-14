@@ -2028,3 +2028,214 @@ input[type=number] {
     -moz-appearance: textfield;
 }
 
+
+/* Custom Mouse Selector Modal Styles */
+.select-mouse-modal-card {
+    width: 760px; /* Wider modal for grid */
+    max-width: 90vw;
+    background: rgba(10, 11, 16, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 210, 255, 0.1);
+}
+
+.select-mouse-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Custom Scrollbar for Modal Body */
+.select-mouse-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+.select-mouse-modal-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+.select-mouse-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+.select-mouse-modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+}
+
+/* Search Box Container */
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0 16px;
+    transition: all 0.3s ease;
+    margin-bottom: 5px;
+}
+
+.search-container:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.search-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.search-container input {
+    width: 100%;
+    height: 48px;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+}
+
+/* Mouse Selection Grid */
+.mouse-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+/* Mouse Card */
+.mouse-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Card Glow Effect on Hover */
+.mouse-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, var(--brand-glow, rgba(0, 210, 255, 0.15)) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.mouse-card:hover::before {
+    opacity: 1;
+}
+
+.mouse-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--brand-color, var(--color-primary));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px var(--brand-glow, rgba(0, 210, 255, 0.1));
+}
+
+.mouse-card.hidden {
+    display: none !important;
+}
+
+/* Mouse Card Content Elements */
+.mouse-card-brand {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--brand-color, var(--text-muted));
+    margin-bottom: 4px;
+    z-index: 1;
+}
+
+.mouse-card-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 16px;
+    z-index: 1;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Styled SVG Mouse Container */
+.mouse-card-image-container {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    transition: transform 0.3s ease;
+}
+
+.mouse-card:hover .mouse-card-image-container {
+    transform: scale(1.1);
+}
+
+.mouse-card-svg {
+    width: 100%;
+    height: 100%;
+    color: var(--brand-color, var(--color-primary));
+}
+
+/* Specs Badges Row */
+.mouse-card-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: auto;
+    z-index: 1;
+}
+
+.spec-badge {
+    font-size: 0.68rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+}
+
+.spec-badge.rgb {
+    background: rgba(13, 245, 211, 0.08);
+    border-color: rgba(13, 245, 211, 0.2);
+    color: var(--color-primary);
+}
+
+/* Generic option styling */
+.select-generic-btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+}

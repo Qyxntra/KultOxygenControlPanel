@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.17";
+        const localVersion = "0.2.18";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -359,48 +359,38 @@ function triggerTabSwitch(tabId) {
 
 async function adaptToDevice(device) {
     const productName = device.productName || "Souris Gaming Universelle";
-    let maxDpi = 3200;
-    let buttonCount = 5;
+    let maxDpi = 16000;
+    let buttonCount = 6;
     let hasRgb = true;
     
-    const nameUpper = productName.toUpperCase();
-    const isAtk = (device.vendorId === 0x373b || device.vendorId === 14139 || 
-                   device.vendorId === 0x3554 || device.vendorId === 13652 ||
-                   nameUpper.includes("ATK") || nameUpper.includes("VXE"));
-                   
-    if (isAtk) {
-        buttonCount = 6;
-        if (nameUpper.includes("ULTRA") || nameUpper.includes("ULTIMATE") || nameUpper.includes("3950")) {
-            maxDpi = 36000;
-        } else {
-            maxDpi = 26000;
-        }
-        if (
-            nameUpper.includes("ULTRA") ||
-            nameUpper.includes("ULTIMATE") ||
-            nameUpper.includes("A9 PLUS") ||
-            nameUpper.includes("A9") ||
-            nameUpper.includes("U2") ||
-            nameUpper.includes("R1S") ||
-            nameUpper.includes("R1 S")
-        ) {
-            hasRgb = false;
-        }
+    // 1. Resolve specs locally via vendorId/productId from COMPATIBLE_MICE database
+    let matchedSpec = null;
+    if (device.vendorId && device.productId) {
+        const key = `${device.vendorId.toString(16).toUpperCase().padStart(4, '0')}:${device.productId.toString(16).toUpperCase().padStart(4, '0')}`;
+        matchedSpec = COMPATIBLE_MICE.find(m => m.id === key);
     }
     
-    showTelemetryToast(`Recherche des spécifications en ligne pour : ${productName}...`);
-    
-    try {
-        const specs = await invokeIPC('fetch_mouse_specs_from_web', { productName });
-        if (specs && specs.max_dpi) {
-            maxDpi = specs.max_dpi;
-            buttonCount = specs.button_count;
-            hasRgb = specs.has_rgb;
-            console.log("Specs crawled successfully:", specs);
-        }
-    } catch (err) {
-        console.error("Web crawler failed, falling back to offline heuristics:", err);
-        const nameUpper = productName.toUpperCase();
+    if (matchedSpec) {
+        maxDpi = matchedSpec.maxDpi;
+        buttonCount = matchedSpec.buttonCount;
+        hasRgb = matchedSpec.hasRgb;
+        console.log("Specs resolved directly from COMPATIBLE_MICE:", matchedSpec);
+    } else {
+        // Fallback to offline WMI queries
+        try {
+            const specs = await invokeIPC('fetch_mouse_specs_from_web', { productName });
+            if (specs && specs.max_dpi) {
+                maxDpi = specs.max_dpi;
+                buttonCount = specs.button_count;
+                hasRgb = specs.has_rgb;
+                console.log("Specs resolved via WMI specs handler:", specs);
+            }
+        } catch (err) {
+            console.error("WMI specs retrieval failed, using offline heuristics:", err);
+            const nameUpper = productName.toUpperCase();
+            const isAtk = (device.vendorId === 0x373b || device.vendorId === 14139 || 
+                           device.vendorId === 0x3554 || device.vendorId === 13652 ||
+                           nameUpper.includes("ATK") || nameUpper.includes("VXE"));
         if (
             nameUpper.includes("OFFICE") ||
             nameUpper.includes("DESKTOP") ||
@@ -461,6 +451,7 @@ async function adaptToDevice(device) {
             maxDpi = 16000;
             buttonCount = 6;
         }
+    }
     }
     
     detectedMouseLimits = {
@@ -538,30 +529,114 @@ function hexToRgb(hex) {
     return isNaN(r) || isNaN(g) || isNaN(b) ? null : `${r}, ${g}, ${b}`;
 }
 
-async function connectDevice() {
-    if (hidDevice) {
-        await hidDevice.close();
-        onDeviceDisconnected();
-        return;
-    }
+const COMPATIBLE_MICE = [
+    { id: "30FA:1440", vendorId: 0x30fa, productId: 0x1440, name: "G-LAB Kult Oxygen", brand: "THE G-LAB", maxDpi: 10000, buttonCount: 7, hasRgb: true, color: "#00d2ff", glow: "rgba(0, 210, 255, 0.15)" },
+    { id: "046D:C231", vendorId: 0x046d, productId: 0xc231, name: "Logitech G102/G203 Prodigy", brand: "LOGITECH", maxDpi: 8000, buttonCount: 6, hasRgb: true, color: "#4364F7", glow: "rgba(67, 100, 247, 0.15)" },
+    { id: "046D:C084", vendorId: 0x046d, productId: 0xc084, name: "Logitech G203 Lightsync", brand: "LOGITECH", maxDpi: 8000, buttonCount: 6, hasRgb: true, color: "#4364F7", glow: "rgba(67, 100, 247, 0.15)" },
+    { id: "046D:C08B", vendorId: 0x046d, productId: 0xc08b, name: "Logitech G502 Hero", brand: "LOGITECH", maxDpi: 25600, buttonCount: 11, hasRgb: true, color: "#0052D4", glow: "rgba(0, 82, 212, 0.15)" },
+    { id: "1532:007A", vendorId: 0x1532, productId: 0x007a, name: "Razer DeathAdder Essential", brand: "RAZER", maxDpi: 6400, buttonCount: 5, hasRgb: false, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" },
+    { id: "1532:0090", vendorId: 0x1532, productId: 0x0090, name: "Razer Viper Mini", brand: "RAZER", maxDpi: 8500, buttonCount: 6, hasRgb: true, color: "#00ff87", glow: "rgba(0, 255, 135, 0.15)" },
+    { id: "35AF:1001", vendorId: 0x35af, productId: 0x1001, name: "ATK F1", brand: "ATK", maxDpi: 36000, buttonCount: 5, hasRgb: false, color: "#8A2387", glow: "rgba(138, 35, 135, 0.15)" },
+    { id: "35AF:1002", vendorId: 0x35af, productId: 0x1002, name: "VXE R1", brand: "VXE", maxDpi: 26000, buttonCount: 5, hasRgb: false, color: "#E94057", glow: "rgba(233, 64, 87, 0.15)" }
+];
+
+function openMouseSelectorModal() {
     const modal = document.getElementById('connection-modal');
-    if (modal) {
-        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
-        const primaryRGB = hexToRgb(primaryColor) || "0, 210, 255";
-        document.documentElement.style.setProperty('--color-primary-rgb', primaryRGB);
-        modal.style.display = 'flex';
+    const grid = document.getElementById('mouse-selection-grid');
+    const searchInput = document.getElementById('mouse-search-input');
+    
+    if (!modal || !grid) return;
+    
+    // Clear search
+    if (searchInput) {
+        searchInput.value = '';
     }
-    try {
-        const devices = await navigator.hid.requestDevice({
-            filters: [
-                { vendorId: 0x30fa }, // G-LAB Kult Oxygen
-                { vendorId: 14139 }, // ATK
-                { vendorId: 13652 }  // VXE
-            ]
+    
+    // Populate cards
+    grid.innerHTML = '';
+    COMPATIBLE_MICE.forEach(mouse => {
+        const card = document.createElement('div');
+        card.className = 'mouse-card';
+        card.style.setProperty('--brand-color', mouse.color);
+        card.style.setProperty('--brand-glow', mouse.glow);
+        card.dataset.name = mouse.name;
+        card.dataset.brand = mouse.brand;
+        
+        card.innerHTML = `
+            <div class="mouse-card-brand">${mouse.brand}</div>
+            <div class="mouse-card-name">${mouse.name}</div>
+            <div class="mouse-card-image-container">
+                <svg class="mouse-card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="7" />
+                    <path d="M12 2v10" />
+                    <path d="M5 12h14" />
+                    <circle cx="12" cy="7" r="1" fill="currentColor" />
+                </svg>
+            </div>
+            <div class="mouse-card-specs">
+                <span class="spec-badge">${mouse.maxDpi.toLocaleString()} DPI</span>
+                <span class="spec-badge">${mouse.buttonCount} Boutons</span>
+                <span class="spec-badge ${mouse.hasRgb ? 'rgb' : ''}">${mouse.hasRgb ? 'RGB' : 'Sans RGB'}</span>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => {
+            modal.style.display = 'none';
+            connectSpecificDevice(mouse.vendorId, mouse.productId);
         });
-        if (devices.length === 0) {
-            return;
+        
+        grid.appendChild(card);
+    });
+    
+    // Setup search listener
+    if (searchInput && !searchInput.dataset.hasListener) {
+        searchInput.dataset.hasListener = 'true';
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase().trim();
+            const cards = grid.querySelectorAll('.mouse-card');
+            cards.forEach(c => {
+                const name = c.dataset.name.toLowerCase();
+                const brand = c.dataset.brand.toLowerCase();
+                if (name.includes(query) || brand.includes(query)) {
+                    c.classList.remove('hidden');
+                } else {
+                    c.classList.add('hidden');
+                }
+            });
+        });
+    }
+    
+    // Setup generic button
+    const genericBtn = document.getElementById('btn-generic-usb-connect');
+    if (genericBtn && !genericBtn.dataset.hasListener) {
+        genericBtn.dataset.hasListener = 'true';
+        genericBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            connectSpecificDevice();
+        });
+    }
+    
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+    const primaryRGB = hexToRgb(primaryColor) || "0, 210, 255";
+    document.documentElement.style.setProperty('--color-primary-rgb', primaryRGB);
+    
+    modal.style.display = 'flex';
+}
+
+async function connectSpecificDevice(vid, pid) {
+    try {
+        const filters = [];
+        if (vid !== undefined && pid !== undefined) {
+            filters.push({ vendorId: vid, productId: pid });
+        } else {
+            // Default filters if generic clicked
+            filters.push({ vendorId: 0x30fa });
+            filters.push({ vendorId: 14139 });
+            filters.push({ vendorId: 13652 });
         }
+        
+        const devices = await navigator.hid.requestDevice({ filters });
+        if (devices.length === 0) return;
         
         let targetDev = null;
         for (const dev of devices) {
@@ -587,11 +662,16 @@ async function connectDevice() {
         onDeviceConnected(hidDevice);
     } catch (err) {
         alert("Erreur de connexion : " + err.message);
-    } finally {
-        if (modal) {
-            modal.style.display = 'none';
-        }
     }
+}
+
+async function connectDevice() {
+    if (hidDevice) {
+        await hidDevice.close();
+        onDeviceDisconnected();
+        return;
+    }
+    openMouseSelectorModal();
 }
 
 function onDeviceConnected(device) {

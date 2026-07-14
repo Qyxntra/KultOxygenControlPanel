@@ -330,17 +330,27 @@ ipcMain.handle('get-connected-mouse-specs', async () => {
 
                 if (foundVidPid) {
                     const specs = MOUSE_DATABASE[foundVidPid];
-                    resolve({ ...specs, source: "database" });
+                    const parts = foundVidPid.split(":");
+                    resolve({ 
+                        ...specs, 
+                        vendor_id: parseInt(parts[0], 16),
+                        product_id: parseInt(parts[1], 16),
+                        source: "database" 
+                    });
                     return;
                 }
 
                 // If not in database, check if there's any general VID/PID
                 let rawVidPid = null;
+                let rawVid = 0;
+                let rawPid = 0;
                 for (const dev of devices) {
                     if (!dev || !dev.InstanceId) continue;
                     const match = dev.InstanceId.match(/VID_([0-9A-F]{4})&PID_([0-9A-F]{4})/i);
                     if (match && !dev.InstanceId.includes("VIRTUALDEVICE")) {
                         rawVidPid = `VID_${match[1]} PID_${match[2]}`;
+                        rawVid = parseInt(match[1], 16);
+                        rawPid = parseInt(match[2], 16);
                         break;
                     }
                 }
@@ -353,6 +363,8 @@ ipcMain.handle('get-connected-mouse-specs', async () => {
                 // Resolve directly using default specs without performing web crawls
                 resolve({
                     product_name: `Mouse (${rawVidPid})`,
+                    vendor_id: rawVid,
+                    product_id: rawPid,
                     max_dpi: 16000,
                     button_count: 6,
                     has_rgb: true,
