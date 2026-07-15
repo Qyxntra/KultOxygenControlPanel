@@ -326,13 +326,12 @@
                             <div class="changelog-container" style="max-height: 250px; overflow-y: auto; padding-right: 8px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.33 (Actuelle)</strong>
+                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.34 (Actuelle)</strong>
                                         <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Aujourd'hui</span>
                                     </div>
                                     <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
-                                        <li><strong>Bascule DPI Ordonnée</strong> : Tri automatique des profils DPI par ordre croissant pour que la bascule par bouton physique ou virtuel cycle de façon fluide du plus bas au plus haut DPI.</li>
-                                        <li><strong>Correction Inversion de Sensibilité</strong> : Résolution de l'inversion de vitesse (1600 DPI plus rapide que 3200 DPI) causée par un dépassement de capacité d'octet (byte overflow) en utilisant la table d'indexation matérielle du capteur Instant A704.</li>
-                                        <li><strong>Bouton Virtuel Bascule DPI</strong> : Bouton direct de bascule DPI ajouté sur le tableau de bord pour tester le cycle à l'écran.</li>
+                                        <li><strong>Correction Échelle DPI G-LAB</strong> : Ajustement de la valeur de registre minimale à 2 pour 400 DPI (évitant d'envoyer 0 qui forçait la souris à réinitialiser sa vitesse par défaut, la rendant plus rapide que 800 DPI).</li>
+                                        <li><strong>Vitesse Physique Homogène</strong> : Vitesse matérielle fluide et croissante respectée de 400 DPI à 12800 DPI.</li>
                                     </ul>
                                 </div>
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">

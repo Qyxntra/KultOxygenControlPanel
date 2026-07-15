@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.33";
+        const localVersion = "0.2.34";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -977,14 +977,12 @@ function sortDpiProfilesAscending() {
 }
 
 function getGlabHardwareDpiValue(dpi) {
-    if (dpi <= 400) return 0;       // 400 DPI -> Step 0 (0x00)
-    if (dpi <= 800) return 1;       // 800 DPI -> Step 1 (0x10)
-    if (dpi <= 1200) return 2;      // 1200 DPI -> Step 2 (0x20)
-    if (dpi <= 1600) return 3;      // 1600 DPI -> Step 3 (0x30)
-    if (dpi <= 2000) return 4;      // 2000 DPI -> Step 4 (0x40)
-    if (dpi <= 2400) return 5;      // 2400 DPI -> Step 5 (0x50)
-    if (dpi <= 3200) return 6;      // 3200 DPI -> Step 6 (0x60)
-    return 7;                       // 4800 DPI or higher -> Step 7 (Max 0x70)
+    // G-LAB hardware steps are based on DPI / 200.
+    // The value is stored in a 4-bit field (high nibble), so it must be capped at 15 (0x0F)
+    // to prevent byte overflow (e.g. 16 << 4 = 256 which overflows to 0, making 3200 DPI slow).
+    // The minimum value is 2 (400 DPI), avoiding 0 which is interpreted as a default fast speed.
+    const rawVal = Math.round(dpi / 200);
+    return Math.max(2, Math.min(rawVal, 15));
 }
 
 async function toggleDpiToNext() {
