@@ -527,7 +527,42 @@
                                         <button class="btn dpi-preset-btn" data-val="32" style="flex: 1; padding: 8px 0; font-weight: 800; font-size: 0.78rem; border-radius: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">6400</button>
                                     </div>
                                 </div>
-                                <p class="help-text" id="dpi-sensor-desc">Configurez les pas du capteur. L'Instant A704 supporte 64 pas physiques de 200 DPI chacun.</p>
+                                <p class="help-text" id="dpi-sensor-desc" style="display: none;"></p>
+                                
+                                <!-- Physical Button Shortcuts -->
+                                <div class="dpi-shortcuts-section" style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 18px;">
+                                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Raccourcis Boutons Physiques</div>
+                                    <div style="display: flex; gap: 10px;">
+                                        <div style="flex: 1;">
+                                            <label for="shortcut-dpi-plus" style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">BOUTON DPI +</label>
+                                            <select id="shortcut-dpi-plus" class="btn-select" style="width: 100%; font-size: 0.75rem; padding: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;"></select>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <label for="shortcut-dpi-minus" style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">BOUTON DPI -</label>
+                                            <select id="shortcut-dpi-minus" class="btn-select" style="width: 100%; font-size: 0.75rem; padding: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;"></select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Calibration Table -->
+                                <div class="dpi-calibration-section" style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 18px;">
+                                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Tableau de Sensibilité</div>
+                                    <div style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+                                        <table id="dpi-calibration-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.72rem;">
+                                            <thead>
+                                                <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border-color);">
+                                                    <th style="padding: 8px 10px; font-weight: 700; color: var(--text-primary);">DPI</th>
+                                                    <th style="padding: 8px 10px; font-weight: 700; color: var(--text-primary);">Résolution (~px/cm)</th>
+                                                    <th style="padding: 8px 10px; font-weight: 700; color: var(--text-primary);">Écran 1080p</th>
+                                                    <th style="padding: 8px 10px; font-weight: 700; color: var(--text-primary);">Usage Type</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dpi-calibration-tbody">
+                                                <!-- Row generated dynamically in app.js and highlighted based on selected DPI -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

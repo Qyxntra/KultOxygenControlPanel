@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.30";
+        const localVersion = "0.2.31";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -912,6 +912,156 @@ navigator.hid.addEventListener('connect', async (e) => {
     }
 });
 
+const CALIBRATION_DATA = [
+    { dpi: 400, pxCm: "~157 px/cm", dist: "12,2 cm", usage: "Bureautique précis / FPS low-sens" },
+    { dpi: 800, pxCm: "~315 px/cm", dist: "6,1 cm (Précis)", usage: "Standard FPS, Bureautique" },
+    { dpi: 1600, pxCm: "~630 px/cm", dist: "3,0 cm (Rapide)", usage: "Le \"sweet spot\" (équilibre idéal)" },
+    { dpi: 3200, pxCm: "~1 260 px/cm", dist: "1,5 cm (Très rapide)", usage: "Écrans 4K ou Multi-écrans" },
+    { dpi: 4800, pxCm: "~1 890 px/cm", dist: "1,0 cm", usage: "Utilisateurs très vifs / Haute résolution" },
+    { dpi: 6400, pxCm: "~2 520 px/cm", dist: "0,7 cm", usage: "Très rare en jeu (souvent trop sensible)" },
+    { dpi: 8000, pxCm: "~3 150 px/cm", dist: "0,6 cm", usage: "Sensibilité extrême" },
+    { dpi: 9600, pxCm: "~3 780 px/cm", dist: "0,5 cm", usage: "Mouvement quasi-invisible de la main" },
+    { dpi: 11200, pxCm: "~4 410 px/cm", dist: "0,4 cm", usage: "Marketing technique (capteur)" },
+    { dpi: 12800, pxCm: "~5 039 px/cm", dist: "0,3 cm", usage: "Inutilisable sans baisser la sensibilité Windows" }
+];
+
+function updateCalibrationTableHighlight(activeDpiVal) {
+    const tbody = document.getElementById('dpi-calibration-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    CALIBRATION_DATA.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--border-color)';
+        tr.style.transition = 'all 0.2s';
+        
+        const isCurrent = Math.abs(row.dpi - activeDpiVal) < 200;
+        if (isCurrent) {
+            tr.style.background = 'rgba(var(--color-primary-rgb), 0.12)';
+            tr.style.fontWeight = 'bold';
+            tr.style.borderLeft = '3px solid var(--color-primary)';
+        }
+        
+        const tdDpi = document.createElement('td');
+        tdDpi.style.padding = '8px 10px';
+        tdDpi.style.color = isCurrent ? 'var(--color-primary)' : 'var(--text-primary)';
+        tdDpi.textContent = `${row.dpi} DPI`;
+        
+        const tdPx = document.createElement('td');
+        tdPx.style.padding = '8px 10px';
+        tdPx.style.color = 'var(--text-secondary)';
+        tdPx.textContent = row.pxCm;
+        
+        const tdDist = document.createElement('td');
+        tdDist.style.padding = '8px 10px';
+        tdDist.style.color = 'var(--text-secondary)';
+        tdDist.textContent = row.dist;
+        
+        const tdUsage = document.createElement('td');
+        tdUsage.style.padding = '8px 10px';
+        tdUsage.style.color = isCurrent ? 'var(--text-primary)' : 'var(--text-secondary)';
+        tdUsage.textContent = row.usage;
+        
+        tr.appendChild(tdDpi);
+        tr.appendChild(tdPx);
+        tr.appendChild(tdDist);
+        tr.appendChild(tdUsage);
+        tbody.appendChild(tr);
+    });
+}
+
+function updateDashboardDpiShortcuts() {
+    const selectPlus = document.getElementById('shortcut-dpi-plus');
+    const selectMinus = document.getElementById('shortcut-dpi-minus');
+    if (!selectPlus || !selectMinus) return;
+    
+    selectPlus.onchange = null;
+    selectMinus.onchange = null;
+    
+    selectPlus.innerHTML = '';
+    selectMinus.innerHTML = '';
+    
+    const optNone1 = document.createElement('option');
+    optNone1.value = "-1";
+    optNone1.textContent = "Aucun";
+    selectPlus.appendChild(optNone1);
+    
+    const optNone2 = document.createElement('option');
+    optNone2.value = "-1";
+    optNone2.textContent = "Aucun";
+    selectMinus.appendChild(optNone2);
+    
+    const buttonCount = mouseSettings.buttons.length;
+    
+    const standardLabels = [
+        "Clic Gauche (1)",
+        "Bouton Molette (2)",
+        "Clic Droit (3)",
+        "Bouton Suivant (4)",
+        "Bouton Précédent (5)",
+        "Bouton DPI + (6)",
+        "Bouton DPI - (7)",
+        "Bouton Spécial 1",
+        "Bouton Spécial 2",
+        "Bouton Spécial 3",
+        "Bouton Spécial 4"
+    ];
+    
+    for (let i = 0; i < buttonCount; i++) {
+        const text = standardLabels[i] || `Bouton ${i + 1}`;
+        
+        const optPlus = document.createElement('option');
+        optPlus.value = i.toString();
+        optPlus.textContent = text;
+        selectPlus.appendChild(optPlus);
+        
+        const optMinus = document.createElement('option');
+        optMinus.value = i.toString();
+        optMinus.textContent = text;
+        selectMinus.appendChild(optMinus);
+    }
+    
+    let activePlusIdx = -1;
+    let activeMinusIdx = -1;
+    for (let i = 0; i < buttonCount; i++) {
+        if (mouseSettings.buttons[i].action === 9) activePlusIdx = i;
+        if (mouseSettings.buttons[i].action === 10) activeMinusIdx = i;
+    }
+    
+    selectPlus.value = activePlusIdx.toString();
+    selectMinus.value = activeMinusIdx.toString();
+    
+    selectPlus.onchange = async (e) => {
+        const selectedIdx = parseInt(e.target.value);
+        for (let i = 0; i < buttonCount; i++) {
+            if (mouseSettings.buttons[i].action === 9) {
+                mouseSettings.buttons[i].action = 5;
+            }
+        }
+        if (selectedIdx >= 0 && mouseSettings.buttons[selectedIdx]) {
+            mouseSettings.buttons[selectedIdx].action = 9;
+        }
+        rebuildButtonMappingUI(buttonCount);
+        updateDashboardDpiShortcuts();
+        await saveMouseSettingsToDevice();
+    };
+    
+    selectMinus.onchange = async (e) => {
+        const selectedIdx = parseInt(e.target.value);
+        for (let i = 0; i < buttonCount; i++) {
+            if (mouseSettings.buttons[i].action === 10) {
+                mouseSettings.buttons[i].action = 5;
+            }
+        }
+        if (selectedIdx >= 0 && mouseSettings.buttons[selectedIdx]) {
+            mouseSettings.buttons[selectedIdx].action = 10;
+        }
+        rebuildButtonMappingUI(buttonCount);
+        updateDashboardDpiShortcuts();
+        await saveMouseSettingsToDevice();
+    };
+}
+
 function updateDpiUI() {
     for (let i = 0; i < 4; i++) {
         const isRadioActive = document.querySelector(`input[name="active-dpi"][value="${i}"]`).checked;
@@ -946,6 +1096,12 @@ function updateDpiUI() {
             btn.classList.remove('active');
         }
     });
+    
+    // Highlight calibration table matching row
+    updateCalibrationTableHighlight(activeVal * 200);
+    
+    // Sync Dashboard DPI Shortcuts selections
+    updateDashboardDpiShortcuts();
     
     updateRgbVisualizer();
     if (typeof syncDashboardDpi === 'function') {
