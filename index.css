@@ -703,6 +703,11 @@ body {
     cursor: pointer;
 }
 
+.btn-select option, .rawaccel-select option, .rawaccel-select-inner option, select option {
+    background-color: #0e111d !important;
+    color: #ffffff !important;
+}
+
 /* Mouse SVG Blueprint Styles */
 .svg-container {
     position: relative;
