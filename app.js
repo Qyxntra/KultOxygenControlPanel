@@ -802,6 +802,29 @@ async function connectDevice() {
     openMouseSelectorModal();
 }
 
+function handleInputReport(e) {
+    const { reportId, data } = e;
+    const payload = new Uint8Array(data.buffer);
+    console.log(`[WebHID Input Report] ID: ${reportId}, Bytes:`, Array.from(payload));
+    
+    // Check for G-LAB / Instant A704 DPI state change packet
+    // Report ID 0x07 is used for active config transmissions. When hardware button changes DPI,
+    // the mouse sends an input report with payload[0] = 0x09 (DPI update notification)
+    if (reportId === 0x07 && payload.length >= 2 && payload[0] === 0x09) {
+        const activeProfileIdx = payload[1] & 0x03; // Limit to 0-3
+        console.log(`[WebHID] Physical DPI Button Press detected! Syncing to active profile index: ${activeProfileIdx}`);
+        
+        // Find the radio button corresponding to this profile index and check it
+        const radio = document.querySelector(`input[name="active-dpi"][value="${activeProfileIdx}"]`);
+        if (radio) {
+            radio.checked = true;
+            // Update UI and apply sensitivity multipliers instantly
+            updateDpiUI();
+            saveRawaccelSettingsToServer();
+        }
+    }
+}
+
 function onDeviceConnected(device) {
     deviceStatus.className = 'status-badge connected';
     deviceStatus.querySelector('.status-dot').style.background = 'var(--color-success)';
@@ -840,11 +863,19 @@ function onDeviceConnected(device) {
     
     adaptToDevice(device);
     
+    // Listen to live input reports from the physical mouse
+    device.addEventListener('inputreport', handleInputReport);
+    
     const previewCard = document.getElementById('mouse-preview-card');
     if (previewCard) previewCard.classList.add('device-connected');
 }
 
 function onDeviceDisconnected() {
+    if (hidDevice) {
+        try {
+            hidDevice.removeEventListener('inputreport', handleInputReport);
+        } catch (e) {}
+    }
     hidDevice = null;
     deviceStatus.className = 'status-badge disconnected';
     deviceStatus.querySelector('.status-dot').style.background = 'var(--color-error)';

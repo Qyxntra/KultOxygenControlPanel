@@ -325,13 +325,17 @@
                             <div class="changelog-container" style="max-height: 250px; overflow-y: auto; padding-right: 8px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.10 (Actuelle)</strong>
+                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.30 (Actuelle)</strong>
                                         <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Aujourd'hui</span>
                                     </div>
                                     <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
-                                        <li><strong>Restauration du bouton Enregistrer</strong> : Le bouton de sauvegarde manuel est de retour pour valider vos choix de manière explicite et éviter les requêtes système spammées.</li>
-                                        <li><strong>Correction du Visualiseur</strong> : Résolution du bug de l'écran noir qui gelait l'onglet Filtres Capteur.</li>
-                                        <li><strong>Angle Snapping Naturel</strong> : Plage de sensibilité réajustée de 0.5° à 15° (au lieu de 5°-30°) et inversion du breakout (Hystérésis) pour une sensation beaucoup plus fluide en jeu.</li>
+                                        <li><strong>Changement de DPI en direct</strong> : Détecte et synchronise en temps réel la sensibilité de l'application lorsque vous appuyez sur le bouton physique de votre souris.</li>
+                                        <li><strong>Extension Éclairage RGB</strong> : Ajout de 3 nouveaux modes d'éclairage (Vague Arc-en-Ciel, Flux Chenillard, Effet Réactif au Clic).</li>
+                                        <li><strong>Tableau de Sensibilité Dynamique</strong> : Affichage des équivalences (px/cm, distance d'écran 1080p, usage conseillé) avec ligne active en surbrillance.</li>
+                                        <li><strong>Raccourcis Boutons DPI</strong> : Assignez vos boutons physiques DPI + / DPI - directement depuis le Dashboard.</li>
+                                        <li><strong>Gestion de Profils Étendue</strong> : Ajout d'une option de suppression de profil personnalisé.</li>
+                                        <li><strong>Écriture EEPROM G-LAB</strong> : Communication Feature Report 0x07 (7 octets) pour enregistrer la configuration physique.</li>
+                                        <li><strong>Correction Contraste</strong> : Menus déroulants foncés optimisés pour une meilleure lisibilité sous Windows.</li>
                                     </ul>
                                 </div>
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -586,6 +590,20 @@
                                     </span>
                                 </label>
                                 <label class="rgb-option">
+                                    <input type="radio" name="rgb-mode" value="17">
+                                    <span class="option-card">
+                                        <span class="mode-name">Vague Chromatique</span>
+                                        <span class="mode-desc">Défilement arc-en-ciel continu.</span>
+                                    </span>
+                                </label>
+                                <label class="rgb-option">
+                                    <input type="radio" name="rgb-mode" value="18">
+                                    <span class="option-card">
+                                        <span class="mode-name">Flux Chenillard</span>
+                                        <span class="mode-desc">Effet chenillard dynamique de LED.</span>
+                                    </span>
+                                </label>
+                                <label class="rgb-option">
                                     <input type="radio" name="rgb-mode" value="19">
                                     <span class="option-card">
                                         <span class="mode-name">Respiration Rapide</span>
@@ -593,10 +611,17 @@
                                     </span>
                                 </label>
                                 <label class="rgb-option">
+                                    <input type="radio" name="rgb-mode" value="20">
+                                    <span class="option-card">
+                                        <span class="mode-name">Effet Réactif (Clic)</span>
+                                        <span class="mode-desc">S'illumine brièvement à chaque clic.</span>
+                                    </span>
+                                </label>
+                                <label class="rgb-option">
                                     <input type="radio" name="rgb-mode" value="21">
                                     <span class="option-card">
-                                        <span class="mode-name">Mode Vitesse Élevée</span>
-                                        <span class="mode-desc">Effet pulsé rapide.</span>
+                                        <span class="mode-name">Spectre de Vitesse</span>
+                                        <span class="mode-desc">Effet pulsé multicolore rapide.</span>
                                     </span>
                                 </label>
                                 <label class="rgb-option">
