@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.27";
+        const localVersion = "0.2.28";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -2333,11 +2333,15 @@ if (aimCanvas) {
             return;
         }
         
-        let dx = currentRawX - lastRawX;
-        let dy = currentRawY - lastRawY;
+        // Calculate the sensitivity multiplier based on the ratio (DPI actuel / DPI de base = 800)
+        const activeDpiVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value * 200;
+        const dpiMultiplier = activeDpiVal / 800;
         
-        rawMouseX = currentRawX;
-        rawMouseY = currentRawY;
+        let dx = (currentRawX - lastRawX) * dpiMultiplier;
+        let dy = (currentRawY - lastRawY) * dpiMultiplier;
+        
+        rawMouseX = lastRawX + dx;
+        rawMouseY = lastRawY + dy;
         
         rawHistory.push({ x: rawMouseX, y: rawMouseY });
         if (rawHistory.length > 30) rawHistory.shift();
