@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.35";
+        const localVersion = "0.2.36";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -977,12 +977,15 @@ function sortDpiProfilesAscending() {
 }
 
 function getGlabHardwareDpiValue(dpi) {
-    // G-LAB hardware steps are based on DPI / 200.
-    // The value is stored in a 4-bit field (high nibble), so it must be capped at 15 (0x0F)
-    // to prevent byte overflow (e.g. 16 << 4 = 256 which overflows to 0, making 3200 DPI slow).
-    // The minimum value is 2 (400 DPI), avoiding 0 which is interpreted as a default fast speed.
-    const rawVal = Math.round(dpi / 200);
-    return Math.max(2, Math.min(rawVal, 15));
+    // Smooth custom mapping above 1600 DPI to prevent extremely fast speeds.
+    if (dpi <= 400) return 2;       // 400 DPI -> 2 (0x20)
+    if (dpi <= 800) return 4;       // 800 DPI -> 4 (0x40)
+    if (dpi <= 1200) return 6;      // 1200 DPI -> 6 (0x60)
+    if (dpi <= 1600) return 8;      // 1600 DPI -> 8 (0x80)
+    if (dpi <= 2000) return 9;      // 2000 DPI -> 9 (0x90) (gradual increase)
+    if (dpi <= 2400) return 10;     // 2400 DPI -> 10 (0xA0) (gradual increase)
+    if (dpi <= 3200) return 11;     // 3200 DPI -> 11 (0xB0) (preventing too fast)
+    return 12;                      // 4800 DPI or higher -> 12 (0xC0) (capped at a very comfortable max speed)
 }
 
 async function toggleDpiToNext() {
@@ -1095,7 +1098,8 @@ function updateCalibrationTableHighlight(activeDpiVal) {
                     dpi: dpi,
                     pxCm: staticRow.pxCm,
                     dist: staticRow.dist,
-                    usage: `Profil ${idx + 1}`
+                    usage: `Profil ${idx + 1}`,
+                    origIdx: idx
                 });
             } else {
                 // Calculate dynamically
@@ -1105,7 +1109,8 @@ function updateCalibrationTableHighlight(activeDpiVal) {
                     dpi: dpi,
                     pxCm: `~${pxCmVal} px/cm`,
                     dist: `${distVal} cm`,
-                    usage: `Profil ${idx + 1} (Perso)`
+                    usage: `Profil ${idx + 1} (Perso)`,
+                    origIdx: idx
                 });
             }
         }
@@ -1119,7 +1124,7 @@ function updateCalibrationTableHighlight(activeDpiVal) {
         tr.style.borderBottom = '1px solid var(--border-color)';
         tr.style.transition = 'all 0.2s';
         
-        const isCurrent = Math.abs(row.dpi - activeDpiVal) < 50;
+        const isCurrent = (row.origIdx === mouseSettings.activeDpi);
         if (isCurrent) {
             tr.style.background = 'rgba(var(--color-primary-rgb), 0.12)';
             tr.style.fontWeight = 'bold';
