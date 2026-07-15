@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.29";
+        const localVersion = "0.2.30";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -265,6 +265,26 @@ function rebuildButtonMappingUI(count) {
     if (!container) return;
     container.innerHTML = '';
     
+    // Ensure mouseSettings.buttons adapts dynamically to the count
+    if (!mouseSettings.buttons) {
+        mouseSettings.buttons = [];
+    }
+    if (mouseSettings.buttons.length !== count) {
+        const newButtons = [];
+        const defaultHexCodes = [0x01, 0x02, 0x03, 0x05, 0x04, 0x08, 0x06, 0x07, 0x09, 0x0a, 0x0b];
+        for (let i = 0; i < count; i++) {
+            if (mouseSettings.buttons[i]) {
+                newButtons.push(mouseSettings.buttons[i]);
+            } else {
+                newButtons.push({
+                    hex: defaultHexCodes[i] || (i + 1),
+                    action: i === 0 ? 0 : (i === 1 ? 1 : (i === 2 ? 2 : (i === 3 ? 4 : (i === 4 ? 3 : (i === 5 ? 9 : (i === 6 ? 10 : 5))))))
+                });
+            }
+        }
+        mouseSettings.buttons = newButtons;
+    }
+    
     const standardLabels = [
         "Bouton Gauche (LMB)",
         "Bouton Molette (MMB)",
@@ -315,16 +335,34 @@ function rebuildButtonMappingUI(count) {
             el.value = opt.value;
             el.textContent = opt.text;
             
-            // Sensible defaults
-            if (i === 0 && opt.value === "0") el.selected = true;
-            if (i === 1 && opt.value === "1") el.selected = true;
-            if (i === 2 && opt.value === "2") el.selected = true;
-            if (i === 3 && opt.value === "3") el.selected = true;
-            if (i === 4 && opt.value === "4") el.selected = true;
-            if (i === 5 && opt.value === "9") el.selected = true;
-            if (i === 6 && opt.value === "10") el.selected = true;
+            if (mouseSettings.buttons[i] && parseInt(opt.value) === mouseSettings.buttons[i].action) {
+                el.selected = true;
+            }
             
             select.appendChild(el);
+        });
+        
+        // Add events directly to the newly created element
+        select.addEventListener('change', (e) => {
+            if (mouseSettings.buttons[i]) {
+                mouseSettings.buttons[i].action = parseInt(e.target.value);
+            }
+        });
+        
+        select.addEventListener('mouseenter', () => {
+            const partId = svgPartMap[i];
+            if (partId) {
+                const part = document.getElementById(partId);
+                if (part) part.classList.add('active-part');
+            }
+        });
+        
+        select.addEventListener('mouseleave', () => {
+            const partId = svgPartMap[i];
+            if (partId) {
+                const part = document.getElementById(partId);
+                if (part) part.classList.remove('active-part');
+            }
         });
         
         row.appendChild(btnNum);
@@ -332,7 +370,7 @@ function rebuildButtonMappingUI(count) {
         row.appendChild(select);
         container.appendChild(row);
         
-        // Hover listeners
+        // Hover listeners on row
         row.addEventListener('mouseenter', () => highlightMouseSvgPart(i, true));
         row.addEventListener('mouseleave', () => highlightMouseSvgPart(i, false));
     }
@@ -897,6 +935,18 @@ function updateDpiUI() {
             dpiRow.classList.remove('active-profile');
         }
     }
+    
+    // Highlight the active DPI preset button if it matches
+    const activeVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value;
+    document.querySelectorAll('.dpi-preset-btn').forEach(btn => {
+        const btnVal = parseInt(btn.dataset.val);
+        if (btnVal === activeVal) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
     updateRgbVisualizer();
     if (typeof syncDashboardDpi === 'function') {
         syncDashboardDpi();
@@ -946,6 +996,17 @@ dpiSlider.addEventListener('change', async (e) => {
     
     // Automatically apply RawAccel scaling instantly on DPI change
     await saveRawaccelSettingsToServer();
+});
+
+// Quick preset buttons event listener
+document.querySelectorAll('.dpi-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const val = parseInt(btn.dataset.val);
+        mouseSettings.dpiProfiles[mouseSettings.activeDpi].value = val;
+        dpiSlider.value = val;
+        updateDpiUI();
+        dpiSlider.dispatchEvent(new Event('change'));
+    });
 });
 
 const physicalDpiInputEl = document.getElementById('physical-mouse-dpi');
@@ -1241,7 +1302,8 @@ async function saveMouseSettingsToDevice() {
         await sendMouseReport(0x12, 0x00, mouseSettings.fireRate);
         await new Promise(r => setTimeout(r, 20));
         
-        for (let i = 0; i < 7; i++) {
+        const buttonCount = mouseSettings.buttons.length;
+        for (let i = 0; i < buttonCount; i++) {
             const btn = mouseSettings.buttons[i];
             const actionHex = actionMenuIdxToHex[btn.action];
             await sendMouseReport(0x10, btn.hex, actionHex);
@@ -2488,6 +2550,26 @@ btnSaveProfile.addEventListener('click', () => {
     profileSelectDropdown.value = cleanName;
     showTelemetryToast(`Profil '${cleanName}' sauvegardé`);
 });
+
+const btnDeleteProfile = document.getElementById('btn-delete-profile');
+if (btnDeleteProfile) {
+    btnDeleteProfile.addEventListener('click', () => {
+        const selected = profileSelectDropdown.value;
+        if (selected === 'default' || selected === 'fps' || selected === 'precision') {
+            alert("Vous ne pouvez pas supprimer un profil d'usine !");
+            return;
+        }
+        if (confirm(`Voulez-vous vraiment supprimer le profil '${selected}' ?`)) {
+            localStorage.removeItem(`GLAB_PROFILE_${selected}`);
+            const opt = document.querySelector(`#profile-select-dropdown option[value="${selected}"]`);
+            if (opt) opt.remove();
+            
+            profileSelectDropdown.value = 'default';
+            loadProfileFromStorage('default');
+            showTelemetryToast(`Profil '${selected}' supprimé`);
+        }
+    });
+}
 
 function saveProfileToStorage(name) {
     const data = {

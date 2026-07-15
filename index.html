@@ -122,13 +122,14 @@
 
                     <div class="nav-section">
                         <div class="section-label">Gestion des Profils</div>
-                        <div class="profile-manager-row" style="display: flex; gap: 8px; padding: 0 4px; margin-bottom: 6px;">
+                        <div class="profile-manager-row" style="display: flex; gap: 6px; padding: 0 4px; margin-bottom: 6px;">
                             <select id="profile-select-dropdown" class="btn-select" style="flex: 1; font-size: 0.8rem; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary);">
                                <option value="default">Profil par défaut</option>
                                 <option value="fps">FPS - Compétitif</option>
                                 <option value="precision">Sniper Précision</option>
                             </select>
                             <button id="btn-save-profile" class="btn secondary-btn" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px;" title="Enregistrer le profil">+</button>
+                            <button id="btn-delete-profile" class="btn secondary-btn" style="padding: 6px 12.5px; font-size: 0.8rem; border-radius: 6px; color: var(--color-error); border-color: rgba(244,63,94,0.2);" title="Supprimer le profil actif">-</button>
                         </div>
                         <div style="display: flex; gap: 6px; padding: 0 4px;">
                             <button id="btn-export-profile" class="btn secondary-btn" style="flex: 1; padding: 4px 0; font-size: 0.72rem; border-radius: 4px;" title="Exporter la configuration sous forme de fichier JSON">Export</button>
@@ -501,16 +502,30 @@
                                 </p>
                                 <input type="number" id="physical-mouse-dpi" class="rawaccel-field" style="width: 100%; text-align: left; padding: 10px; font-weight: bold; color: var(--color-primary);" value="800">
                             </div>
-                            <div class="dpi-slider-container">
-                                <div class="slider-header">
-                                    <span class="slider-label-desc">Sensibilité Actuelle :</span>
-                                    <span class="highlight-val" id="active-dpi-display">800 DPI</span>
+                            <div class="dpi-slider-container" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: inset 0 0 10px rgba(0,0,0,0.2);">
+                                <div class="slider-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                    <span class="slider-label-desc" style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">SENSIBILITÉ ACTUELLE</span>
+                                    <div class="dpi-badge" style="background: rgba(var(--color-primary-rgb), 0.1); border: 1px solid var(--color-primary); padding: 6px 14px; border-radius: 8px; box-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.2);">
+                                        <span class="highlight-val" id="active-dpi-display" style="font-size: 1.1rem; font-weight: 800; color: var(--color-primary); letter-spacing: 0.5px;">800 DPI</span>
+                                    </div>
                                 </div>
-                                <input type="range" id="dpi-slider" min="1" max="64" step="1" value="4" class="custom-range">
-                                <div class="slider-labels" id="dpi-slider-labels">
-                                    <span>200 DPI</span>
+                                <div style="position: relative; padding: 10px 0;">
+                                    <input type="range" id="dpi-slider" min="1" max="64" step="1" value="4" class="custom-range" style="height: 8px;">
+                                </div>
+                                <div class="slider-labels" id="dpi-slider-labels" style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); margin-top: 4px; padding: 0 2px;">
+                                    <span id="dpi-min-label">200 DPI</span>
                                     <span id="dpi-mid-label">6400 DPI</span>
                                     <span id="dpi-max-label">12800 DPI</span>
+                                </div>
+                                <div class="dpi-presets-container" style="margin-top: 20px;">
+                                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Raccourcis de Préréglages</div>
+                                    <div class="dpi-presets-row" style="display: flex; gap: 8px;">
+                                        <button class="btn dpi-preset-btn" data-val="2" style="flex: 1; padding: 8px 0; font-weight: 800; font-size: 0.78rem; border-radius: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">400</button>
+                                        <button class="btn dpi-preset-btn" data-val="4" style="flex: 1; padding: 8px 0; font-weight: 800; font-size: 0.78rem; border-radius: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">800</button>
+                                        <button class="btn dpi-preset-btn" data-val="8" style="flex: 1; padding: 8px 0; font-weight: 800; font-size: 0.78rem; border-radius: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">1600</button>
+                                        <button class="btn dpi-preset-btn" data-val="16" style="flex: 1; padding: 8px 0; font-weight: 800; font-size: 0.78rem; border-radius: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">3200</button>
+                                        <button class="btn dpi-preset-btn" data-val="32" style="flex: 1; padding: 8px 0; font-weight: 800; font-size: 0.78rem; border-radius: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">6400</button>
+                                    </div>
                                 </div>
                                 <p class="help-text" id="dpi-sensor-desc">Configurez les pas du capteur. L'Instant A704 supporte 64 pas physiques de 200 DPI chacun.</p>
                             </div>
