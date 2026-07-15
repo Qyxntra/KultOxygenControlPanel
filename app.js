@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.25";
+        const localVersion = "0.2.26";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -836,6 +836,22 @@ if (widgetConnectBtn) {
 }
 navigator.hid.addEventListener('disconnect', (e) => {
     if (hidDevice && e.device === hidDevice) onDeviceDisconnected();
+});
+navigator.hid.addEventListener('connect', async (e) => {
+    console.log("HID device connected event:", e.device);
+    const isCompatible = COMPATIBLE_MICE.some(m => m.vendorId === e.device.vendorId && m.productId === e.device.productId);
+    if (isCompatible && !hidDevice) {
+        try {
+            await e.device.open();
+            hidDevice = e.device;
+            onDeviceConnected(hidDevice);
+            setTimeout(() => {
+                saveMouseSettingsToDevice();
+            }, 500);
+        } catch (err) {
+            console.error("Error auto-opening connected device:", err);
+        }
+    }
 });
 
 function updateDpiUI() {
@@ -2015,6 +2031,34 @@ async function autoDetectConnectedMouse() {
 updateDpiUI();
 fetchRawaccelSettings();
 autoDetectConnectedMouse();
+
+// Auto-connect to already permitted devices on load
+async function autoConnectMouse() {
+    try {
+        const devices = await navigator.hid.getDevices();
+        if (devices && devices.length > 0) {
+            for (const dev of devices) {
+                const isCompatible = COMPATIBLE_MICE.some(m => m.vendorId === dev.vendorId && m.productId === dev.productId);
+                if (isCompatible) {
+                    await dev.open();
+                    hidDevice = dev;
+                    onDeviceConnected(hidDevice);
+                    console.log("Automatically reconnected to mouse:", dev.productName);
+                    
+                    // Instantly apply the saved settings to the mouse RAM
+                    setTimeout(() => {
+                        saveMouseSettingsToDevice();
+                    }, 500);
+                    break;
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Auto-connect failed:", err);
+    }
+}
+autoConnectMouse();
+
 console.log("Professional Dashboard Initialized.");
 
 // ==========================================

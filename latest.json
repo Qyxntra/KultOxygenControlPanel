@@ -1,11 +1,11 @@
 {
-  "version": "0.2.25",
+  "version": "0.2.26",
   "notes": "Mise à jour : Intégration native de RawAccel par backend Rust, correction du dimensionnement du visualiseur de signal, note sur la stabilité des courbes, et lissage sensoriel (Smoothing) paramétrable.",
   "pub_date": "2026-07-13T12:12:00Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "",
-      "url": "https://github.com/Qyxntra/KultOxygenControlPanel/releases/download/v0.2.25/KultOxygenControlPanel_Setup.exe"
+      "url": "https://github.com/Qyxntra/KultOxygenControlPanel/releases/download/v0.2.26/KultOxygenControlPanel_Setup.exe"
     }
   }
 }
