@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.32";
+        const localVersion = "0.2.33";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -958,10 +958,90 @@ async function onDeviceDisconnected() {
     if (previewCard) previewCard.classList.remove('device-connected');
 }
 
+function sortDpiProfilesAscending() {
+    if (!mouseSettings || !mouseSettings.dpiProfiles) return;
+    
+    // Remember the value of the active profile before sorting
+    const activeVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi]?.value || 4;
+    
+    // Sort profiles based on value ascending
+    mouseSettings.dpiProfiles.sort((a, b) => a.value - b.value);
+    
+    // Find the new index of the active profile
+    const newIdx = mouseSettings.dpiProfiles.findIndex(p => p.value === activeVal);
+    if (newIdx !== -1) {
+        mouseSettings.activeDpi = newIdx;
+        const radio = document.querySelector(`input[name="active-dpi"][value="${newIdx}"]`);
+        if (radio) radio.checked = true;
+    }
+}
+
+function getGlabHardwareDpiValue(dpi) {
+    if (dpi <= 400) return 0;       // 400 DPI -> Step 0 (0x00)
+    if (dpi <= 800) return 1;       // 800 DPI -> Step 1 (0x10)
+    if (dpi <= 1200) return 2;      // 1200 DPI -> Step 2 (0x20)
+    if (dpi <= 1600) return 3;      // 1600 DPI -> Step 3 (0x30)
+    if (dpi <= 2000) return 4;      // 2000 DPI -> Step 4 (0x40)
+    if (dpi <= 2400) return 5;      // 2400 DPI -> Step 5 (0x50)
+    if (dpi <= 3200) return 6;      // 3200 DPI -> Step 6 (0x60)
+    return 7;                       // 4800 DPI or higher -> Step 7 (Max 0x70)
+}
+
+async function toggleDpiToNext() {
+    if (!mouseSettings || !mouseSettings.dpiProfiles) return;
+    
+    // Find all enabled profile indices
+    const enabledIndices = [];
+    for (let i = 0; i < 4; i++) {
+        if (mouseSettings.dpiProfiles[i].enabled) {
+            enabledIndices.push(i);
+        }
+    }
+    
+    if (enabledIndices.length === 0) return; // None enabled, do nothing
+    
+    // Find where the current activeDpi index is in the enabled list
+    const currentPos = enabledIndices.indexOf(mouseSettings.activeDpi);
+    let nextIdx;
+    if (currentPos === -1 || currentPos === enabledIndices.length - 1) {
+        // Wrap around to the first enabled profile
+        nextIdx = enabledIndices[0];
+    } else {
+        nextIdx = enabledIndices[currentPos + 1];
+    }
+    
+    console.log(`[DPI Toggle] Switching active index from ${mouseSettings.activeDpi} to ${nextIdx}`);
+    
+    // Check the radio button in UI
+    const radio = document.querySelector(`input[name="active-dpi"][value="${nextIdx}"]`);
+    if (radio) {
+        radio.checked = true;
+        updateDpiUI();
+        
+        // Send hardware command
+        const nameUpper = (hidDevice?.productName || "").toUpperCase();
+        const isAtkMouse = hidDevice && (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
+                                         hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
+                                         nameUpper.includes("ATK") || nameUpper.includes("VXE"));
+        if (isAtkMouse) {
+            const activeDpiVal = mouseSettings.dpiProfiles[nextIdx].value * 200;
+            await sendAtkDpi(activeDpiVal);
+        } else if (hidDevice) {
+            await sendGlabActiveDpi();
+        }
+        
+        await saveRawaccelSettingsToServer();
+    }
+}
+
 connectBtn.addEventListener('click', connectDevice);
 const widgetConnectBtn = document.getElementById('widget-connect-btn');
 if (widgetConnectBtn) {
     widgetConnectBtn.addEventListener('click', connectDevice);
+}
+const widgetToggleDpiBtn = document.getElementById('widget-toggle-dpi-btn');
+if (widgetToggleDpiBtn) {
+    widgetToggleDpiBtn.addEventListener('click', toggleDpiToNext);
 }
 navigator.hid.addEventListener('disconnect', (e) => {
     if (hidDevice && e.device === hidDevice) onDeviceDisconnected();
@@ -1236,6 +1316,12 @@ dpiSlider.addEventListener('input', (e) => {
 
 dpiSlider.addEventListener('change', async (e) => {
     const val = parseInt(e.target.value);
+    mouseSettings.dpiProfiles[mouseSettings.activeDpi].value = val;
+    
+    // Sort profiles ascending after modification
+    sortDpiProfilesAscending();
+    updateDpiUI();
+    
     const nameUpper = (hidDevice?.productName || "").toUpperCase();
     const isAtkMouse = hidDevice && (hidDevice.vendorId === 0x373b || hidDevice.vendorId === 14139 || 
                                      hidDevice.vendorId === 0x3554 || hidDevice.vendorId === 13652 ||
@@ -1255,6 +1341,9 @@ document.querySelectorAll('.dpi-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const val = parseInt(btn.dataset.val);
         mouseSettings.dpiProfiles[mouseSettings.activeDpi].value = val;
+        
+        // Sort profiles ascending after preset selection
+        sortDpiProfilesAscending();
         dpiSlider.value = val;
         updateDpiUI();
         dpiSlider.dispatchEvent(new Event('change'));
@@ -1514,15 +1603,15 @@ async function sendGlabActiveDpi() {
         const i = mouseSettings.activeDpi;
         const profile = mouseSettings.dpiProfiles[i];
         const profileBits = 0x08 + i;
-        // Cap the physical DPI sent to the hardware to 4800 DPI (step 24) to prevent byte overflow and firmware issues.
-        const hardwareVal = Math.min(profile.value, 24);
+        // Map the user-defined DPI to the Instant A704 chip hardware register step index (0 to 7)
+        const hardwareVal = getGlabHardwareDpiValue(profile.value * 200);
         const dataVal = (hardwareVal << 4) | profileBits;
         let enabledDpiBit = 0;
         for (let j = 0; j < 4; j++) {
             if (mouseSettings.dpiProfiles[j].enabled) enabledDpiBit |= (1 << j);
         }
         await sendMouseReport(0x09, mouseSettings.activeDpi, dataVal, enabledDpiBit);
-        console.log(`G-LAB HID ActiveDpi sent: index ${i}, value ${profile.value * 200}`);
+        console.log(`G-LAB HID ActiveDpi sent: index ${i}, value ${profile.value * 200} (Hardware Step: ${hardwareVal})`);
     } catch (err) {
         console.error("Failed to send G-LAB Active DPI:", err);
     }
@@ -1570,8 +1659,8 @@ async function saveMouseSettingsToDevice() {
         for (let i = 0; i < 4; i++) {
             const profile = mouseSettings.dpiProfiles[i];
             const profileBits = 0x08 + i;
-            // Cap the physical DPI sent to the hardware to 4800 DPI (step 24) to prevent byte overflow and firmware issues.
-            const hardwareVal = Math.min(profile.value, 24);
+            // Map the user-defined DPI to the Instant A704 chip hardware register step index (0 to 7)
+            const hardwareVal = getGlabHardwareDpiValue(profile.value * 200);
             const dataVal = (hardwareVal << 4) | profileBits;
             await sendMouseReport(0x09, mouseSettings.activeDpi, dataVal, enabledDpiBit);
             await new Promise(r => setTimeout(r, 15));

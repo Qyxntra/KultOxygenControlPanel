@@ -203,19 +203,20 @@
                         </div>
 
                         <!-- Widget: DPI & Sensibilité -->
-                        <div class="card widget-card drag-widget" draggable="true" id="widget-dpi">
+                        <div class="card widget-card drag-widget" draggable="true" id="widget-dpi" style="display: flex; flex-direction: column; justify-content: space-between;">
                             <div class="widget-drag-handle">
                                 <svg viewBox="0 0 24 24" width="16" height="16"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 12c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm0-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor"/></svg>
                             </div>
                             <h3 class="card-title">Sensibilité Active</h3>
-                            <div class="widget-large-display">
+                            <div class="widget-large-display" style="flex: 1; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
                                 <span class="widget-value-large" id="dash-active-dpi">1600</span>
                                 <span class="widget-unit-large">DPI</span>
                             </div>
-                            <div class="widget-footer-info">
+                            <div class="widget-footer-info" style="margin-bottom: 10px;">
                                 <span>Profil : <strong id="dash-active-profile" style="color: var(--color-secondary);">FPS - Compétitif</strong></span>
                                 <span>eDPI : <strong id="dash-effective-sens" style="color: var(--color-primary);">400</strong></span>
                             </div>
+                            <button id="widget-toggle-dpi-btn" class="btn primary-btn glow-btn-anim" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: linear-gradient(135deg, var(--color-primary), #00a2ff); color: #000; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 210, 255, 0.15); width: 100%;">Bascule DPI</button>
                         </div>
 
                         <!-- Widget: Vitesse & Télémétrie -->
@@ -325,14 +326,13 @@
                             <div class="changelog-container" style="max-height: 250px; overflow-y: auto; padding-right: 8px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.32 (Actuelle)</strong>
+                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.33 (Actuelle)</strong>
                                         <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Aujourd'hui</span>
                                     </div>
                                     <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
-                                        <li><strong>Changement de DPI en direct fiable</strong> : Écoute en parallèle l'ensemble des interfaces HID de la souris pour capturer instantanément le changement de profil DPI en direct sur l'interface multimédia.</li>
-                                        <li><strong>Tableau de Sensibilité Intelligent</strong> : Génération dynamique des lignes du tableau d'équivalence en intégrant automatiquement toute valeur DPI active personnalisée (ex: 1200 DPI).</li>
-                                        <li><strong>Raccourcis Boutons DPI</strong> : Configuration rapide des touches physiques DPI + / DPI - directement depuis le tableau de bord.</li>
-                                        <li><strong>RGB Étendu</strong> : 3 nouveaux modes d'éclairage réactifs et dynamiques pour le capteur A704.</li>
+                                        <li><strong>Bascule DPI Ordonnée</strong> : Tri automatique des profils DPI par ordre croissant pour que la bascule par bouton physique ou virtuel cycle de façon fluide du plus bas au plus haut DPI.</li>
+                                        <li><strong>Correction Inversion de Sensibilité</strong> : Résolution de l'inversion de vitesse (1600 DPI plus rapide que 3200 DPI) causée par un dépassement de capacité d'octet (byte overflow) en utilisant la table d'indexation matérielle du capteur Instant A704.</li>
+                                        <li><strong>Bouton Virtuel Bascule DPI</strong> : Bouton direct de bascule DPI ajouté sur le tableau de bord pour tester le cycle à l'écran.</li>
                                     </ul>
                                 </div>
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
