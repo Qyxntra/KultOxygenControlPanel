@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.23";
+        const localVersion = "0.2.24";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -1095,15 +1095,32 @@ if (btnCalcEdpi) {
 
 async function sendMouseReport(updateType, forComponent, data, enabledDpiProfile = 0x00) {
     if (!hidDevice) return;
-    const reportData = new Uint8Array(7);
-    reportData[0] = updateType;
-    reportData[1] = forComponent;
-    reportData[2] = data;
-    reportData[3] = enabledDpiProfile;
+    
+    // The G-LAB Kult Oxygen mouse expects a 16-byte feature report using Report ID 0x21.
+    // The first 8 bytes represent the USB Setup packet fields.
+    const packet = new Uint8Array(15); // WebHID sendFeatureReport expects payload excluding report ID, so 15 bytes
+    packet[0] = 0x09; // bRequest SET_CONFIGURATION
+    packet[1] = 0x07; // wValue (High)
+    packet[2] = 0x03; // wValue (Low)
+    packet[3] = 0x01; // wIndex
+    packet[4] = 0x00;
+    packet[5] = 0x08; // wLength
+    packet[6] = 0x00;
+    
+    packet[7] = 0x07; // Actual Report ID inside payload
+    packet[8] = updateType;
+    packet[9] = forComponent;
+    packet[10] = data;
+    packet[11] = enabledDpiProfile;
+    packet[12] = 0x00;
+    packet[13] = 0x00;
+    packet[14] = 0x00;
+    
     try {
-        await hidDevice.sendFeatureReport(0x07, reportData);
+        await hidDevice.sendFeatureReport(0x21, packet);
+        console.log(`G-LAB HID Report 0x21 sent. Type: ${updateType}, Comp: ${forComponent}, Data: ${data}, Enabled: ${enabledDpiProfile}`);
     } catch (err) {
-        console.error("HID transmission error:", err);
+        console.error("G-LAB HID transmission error (0x21):", err);
     }
 }
 
@@ -2469,7 +2486,7 @@ function loadProfileFromStorage(name) {
                 document.getElementById('row-snap-threshold').style.display = chkSnap.checked ? 'block' : 'none';
             }
             if (snapSlider) {
-                snapSlider.value = filters.snapThreshold || 15;
+                snapSlider.value = filters.snapThreshold || 3;
                 if (snapDisplay) snapDisplay.textContent = `${snapSlider.value}°`;
             }
             if (chkRipple) {
