@@ -326,12 +326,12 @@
                             <div class="changelog-container" style="max-height: 250px; overflow-y: auto; padding-right: 8px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.36 (Actuelle)</strong>
+                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.37 (Actuelle)</strong>
                                         <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Aujourd'hui</span>
                                     </div>
                                     <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
-                                        <li><strong>Highlight Précis du Tableau</strong> : Résolution du bug de double highlight dans le tableau de calibrage en ciblant le profil actif par son index unique, même si deux profils partagent la même valeur DPI.</li>
-                                        <li><strong>DPI Adoucis (DPI > 1600)</strong> : Adoucissement de l'échelle de vitesse matérielle du capteur A704 pour les valeurs au-dessus de 1600 DPI (ex: 3200 DPI) pour une glisse plus contrôlable et moins agressive.</li>
+                                        <li><strong>Stabilité des Index DPI Identiques</strong> : Suivi rigoureux de l'identité des profils par référence d'objet (object reference) au lieu de leur valeur numérique brute lors du tri. Cela empêche le profil actif de sauter vers une autre ligne s'il existe plusieurs profils à 1600 DPI.</li>
+                                        <li><strong>Correction Highlight Fixe</strong> : Correction de la détection de highlight de tableau pour identifier de façon unique le profil actif.</li>
                                     </ul>
                                 </div>
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">

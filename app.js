@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.36";
+        const localVersion = "0.2.37";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -961,14 +961,15 @@ async function onDeviceDisconnected() {
 function sortDpiProfilesAscending() {
     if (!mouseSettings || !mouseSettings.dpiProfiles) return;
     
-    // Remember the value of the active profile before sorting
-    const activeVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi]?.value || 4;
+    // Remember the object reference of the active profile before sorting
+    const activeObj = mouseSettings.dpiProfiles[mouseSettings.activeDpi];
+    if (!activeObj) return;
     
     // Sort profiles based on value ascending
     mouseSettings.dpiProfiles.sort((a, b) => a.value - b.value);
     
-    // Find the new index of the active profile
-    const newIdx = mouseSettings.dpiProfiles.findIndex(p => p.value === activeVal);
+    // Find the new index of the active profile by object reference
+    const newIdx = mouseSettings.dpiProfiles.indexOf(activeObj);
     if (newIdx !== -1) {
         mouseSettings.activeDpi = newIdx;
         const radio = document.querySelector(`input[name="active-dpi"][value="${newIdx}"]`);
