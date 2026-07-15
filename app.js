@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.26";
+        const localVersion = "0.2.27";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -516,6 +516,19 @@ async function adaptToDevice(device) {
     const brandRGB = hexToRgb(brandColor) || "0, 210, 255";
     document.documentElement.style.setProperty('--color-primary', brandColor);
     document.documentElement.style.setProperty('--color-primary-rgb', brandRGB);
+    
+    // Hide physical mouse DPI input container for hardware-configurable mice (G-LAB, ATK, VXE) to avoid confusion
+    const containerPhysicalDpi = document.getElementById('container-physical-mouse-dpi');
+    if (containerPhysicalDpi) {
+        const isHardwareConfigurable = (
+            device.vendorId === 0x30fa ||
+            device.vendorId === 0x373b || device.vendorId === 14139 || 
+            device.vendorId === 0x3554 || device.vendorId === 13652 ||
+            nameUpper.includes("G-LAB") || nameUpper.includes("KULT") ||
+            nameUpper.includes("ATK") || nameUpper.includes("VXE")
+        );
+        containerPhysicalDpi.style.display = isHardwareConfigurable ? 'none' : 'block';
+    }
 }
 
 function revertToDefaultDevice() {
@@ -543,6 +556,11 @@ function revertToDefaultDevice() {
     // Revert CSS variables to G-LAB defaults
     document.documentElement.style.setProperty('--color-primary', '#00d2ff');
     document.documentElement.style.setProperty('--color-primary-rgb', '0, 210, 255');
+    
+    const containerPhysicalDpi = document.getElementById('container-physical-mouse-dpi');
+    if (containerPhysicalDpi) {
+        containerPhysicalDpi.style.display = 'none'; // Default is G-LAB (hardware configurable)
+    }
 }
 
 function hexToRgb(hex) {
@@ -711,10 +729,12 @@ async function connectSpecificDevice(vid, pid) {
         let targetDev = null;
         for (const dev of devices) {
             const nameUpper = (dev.productName || "").toUpperCase();
+            const isGlab = (dev.vendorId === 0x30fa || nameUpper.includes("G-LAB") || nameUpper.includes("KULT"));
             const isAtk = (dev.vendorId === 0x373b || dev.vendorId === 14139 || 
                            dev.vendorId === 0x3554 || dev.vendorId === 13652 ||
                            nameUpper.includes("ATK") || nameUpper.includes("VXE"));
-            if (isAtk) {
+            
+            if (isGlab || isAtk) {
                 const hasConfig = dev.collections && dev.collections.some(c => c.usagePage === 65284 || c.usagePage === 0xFF04 || c.usagePage >= 0xFF00);
                 if (hasConfig) {
                     targetDev = dev;
@@ -2037,20 +2057,39 @@ async function autoConnectMouse() {
     try {
         const devices = await navigator.hid.getDevices();
         if (devices && devices.length > 0) {
+            let targetDev = null;
             for (const dev of devices) {
                 const isCompatible = COMPATIBLE_MICE.some(m => m.vendorId === dev.vendorId && m.productId === dev.productId);
                 if (isCompatible) {
-                    await dev.open();
-                    hidDevice = dev;
-                    onDeviceConnected(hidDevice);
-                    console.log("Automatically reconnected to mouse:", dev.productName);
+                    const nameUpper = (dev.productName || "").toUpperCase();
+                    const isGlab = (dev.vendorId === 0x30fa || nameUpper.includes("G-LAB") || nameUpper.includes("KULT"));
+                    const isAtk = (dev.vendorId === 0x373b || dev.vendorId === 14139 || 
+                                   dev.vendorId === 0x3554 || dev.vendorId === 13652 ||
+                                   nameUpper.includes("ATK") || nameUpper.includes("VXE"));
                     
-                    // Instantly apply the saved settings to the mouse RAM
-                    setTimeout(() => {
-                        saveMouseSettingsToDevice();
-                    }, 500);
-                    break;
+                    if (isGlab || isAtk) {
+                        const hasConfig = dev.collections && dev.collections.some(c => c.usagePage === 65284 || c.usagePage === 0xFF04 || c.usagePage >= 0xFF00);
+                        if (hasConfig) {
+                            targetDev = dev;
+                            break;
+                        }
+                    } else {
+                        targetDev = dev;
+                        break;
+                    }
                 }
+            }
+            
+            if (targetDev) {
+                await targetDev.open();
+                hidDevice = targetDev;
+                onDeviceConnected(hidDevice);
+                console.log("Automatically reconnected to mouse config collection:", targetDev.productName);
+                
+                // Instantly apply the saved settings to the mouse RAM
+                setTimeout(() => {
+                    saveMouseSettingsToDevice();
+                }, 500);
             }
         }
     } catch (err) {
