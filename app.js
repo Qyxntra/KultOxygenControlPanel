@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.34";
+        const localVersion = "0.2.35";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -1083,25 +1083,35 @@ function updateCalibrationTableHighlight(activeDpiVal) {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    // Copy the static calibration data
-    let list = [...CALIBRATION_DATA];
+    // Build list exclusively from enabled DPI profiles
+    let list = [];
+    mouseSettings.dpiProfiles.forEach((profile, idx) => {
+        if (profile.enabled) {
+            const dpi = profile.value * 200;
+            // Find in static CALIBRATION_DATA
+            const staticRow = CALIBRATION_DATA.find(r => Math.abs(r.dpi - dpi) < 50);
+            if (staticRow) {
+                list.push({
+                    dpi: dpi,
+                    pxCm: staticRow.pxCm,
+                    dist: staticRow.dist,
+                    usage: `Profil ${idx + 1}`
+                });
+            } else {
+                // Calculate dynamically
+                const pxCmVal = Math.round(dpi / 2.54);
+                const distVal = (1920 / (dpi / 2.54)).toFixed(1);
+                list.push({
+                    dpi: dpi,
+                    pxCm: `~${pxCmVal} px/cm`,
+                    dist: `${distVal} cm`,
+                    usage: `Profil ${idx + 1} (Perso)`
+                });
+            }
+        }
+    });
     
-    // Check if the current active DPI is already in the list
-    const exists = list.some(row => Math.abs(row.dpi - activeDpiVal) < 50);
-    if (!exists && activeDpiVal >= 200 && activeDpiVal <= 12800) {
-        // Calculate px/cm and distance dynamically for custom values
-        const pxCmVal = Math.round(activeDpiVal / 2.54);
-        const distVal = (1920 / (activeDpiVal / 2.54)).toFixed(1);
-        list.push({
-            dpi: activeDpiVal,
-            pxCm: `~${pxCmVal} px/cm`,
-            dist: `${distVal} cm`,
-            usage: "Valeur de sensibilité active",
-            isCustom: true
-        });
-    }
-    
-    // Sort all rows by DPI ascending
+    // Sort by DPI ascending
     list.sort((a, b) => a.dpi - b.dpi);
     
     list.forEach(row => {
@@ -1142,6 +1152,62 @@ function updateCalibrationTableHighlight(activeDpiVal) {
         tr.appendChild(tdUsage);
         tbody.appendChild(tr);
     });
+}
+
+function updateDpiUI() {
+    for (let i = 0; i < 4; i++) {
+        // Sync radio button to match mouseSettings.activeDpi
+        const radio = document.querySelector(`input[name="active-dpi"][value="${i}"]`);
+        if (radio) radio.checked = (mouseSettings.activeDpi === i);
+        
+        // Sync enable checkbox to match mouseSettings.dpiProfiles[i].enabled
+        if (i > 0) {
+            const chk = document.getElementById(`dpi-enable-${i}`);
+            if (chk) chk.checked = mouseSettings.dpiProfiles[i].enabled;
+        }
+        
+        const isRadioActive = (mouseSettings.activeDpi === i);
+        const readout = document.getElementById(`dpi-val-readout-${i}`);
+        const dpiRow = document.querySelector(`.dpi-row[data-idx="${i}"]`);
+        
+        readout.textContent = `${mouseSettings.dpiProfiles[i].value * 200} DPI`;
+        
+        if (isRadioActive) {
+            dpiRow.classList.add('active-profile');
+            dpiSlider.value = mouseSettings.dpiProfiles[i].value;
+            activeDpiDisplay.textContent = `${mouseSettings.dpiProfiles[i].value * 200} DPI`;
+            
+            const activeColors = ['#0088ff', '#ffaa00', '#00ff66', '#ff00ff'];
+            const customStored = localStorage.getItem('GLAB_THEME_CUSTOM');
+            if (!customStored) {
+                document.documentElement.style.setProperty('--color-primary', activeColors[i]);
+            }
+        } else {
+            dpiRow.classList.remove('active-profile');
+        }
+    }
+    
+    // Highlight the active DPI preset button if it matches
+    const activeVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value;
+    document.querySelectorAll('.dpi-preset-btn').forEach(btn => {
+        const btnVal = parseInt(btn.dataset.val);
+        if (btnVal === activeVal) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Highlight calibration table matching row
+    updateCalibrationTableHighlight(activeVal * 200);
+    
+    // Sync Dashboard DPI Shortcuts selections
+    updateDashboardDpiShortcuts();
+    
+    updateRgbVisualizer();
+    if (typeof syncDashboardDpi === 'function') {
+        syncDashboardDpi();
+    }
 }
 
 function updateDashboardDpiShortcuts() {
@@ -1236,52 +1302,7 @@ function updateDashboardDpiShortcuts() {
     };
 }
 
-function updateDpiUI() {
-    for (let i = 0; i < 4; i++) {
-        const isRadioActive = document.querySelector(`input[name="active-dpi"][value="${i}"]`).checked;
-        const readout = document.getElementById(`dpi-val-readout-${i}`);
-        const dpiRow = document.querySelector(`.dpi-row[data-idx="${i}"]`);
-        
-        readout.textContent = `${mouseSettings.dpiProfiles[i].value * 200} DPI`;
-        
-        if (isRadioActive) {
-            dpiRow.classList.add('active-profile');
-            mouseSettings.activeDpi = i;
-            dpiSlider.value = mouseSettings.dpiProfiles[i].value;
-            activeDpiDisplay.textContent = `${mouseSettings.dpiProfiles[i].value * 200} DPI`;
-            
-            const activeColors = ['#0088ff', '#ffaa00', '#00ff66', '#ff00ff'];
-            const customStored = localStorage.getItem('GLAB_THEME_CUSTOM');
-            if (!customStored) {
-                document.documentElement.style.setProperty('--color-primary', activeColors[i]);
-            }
-        } else {
-            dpiRow.classList.remove('active-profile');
-        }
-    }
-    
-    // Highlight the active DPI preset button if it matches
-    const activeVal = mouseSettings.dpiProfiles[mouseSettings.activeDpi].value;
-    document.querySelectorAll('.dpi-preset-btn').forEach(btn => {
-        const btnVal = parseInt(btn.dataset.val);
-        if (btnVal === activeVal) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    // Highlight calibration table matching row
-    updateCalibrationTableHighlight(activeVal * 200);
-    
-    // Sync Dashboard DPI Shortcuts selections
-    updateDashboardDpiShortcuts();
-    
-    updateRgbVisualizer();
-    if (typeof syncDashboardDpi === 'function') {
-        syncDashboardDpi();
-    }
-}
+
 
 document.querySelectorAll('input[name="active-dpi"]').forEach(radio => {
     radio.addEventListener('change', async () => {
