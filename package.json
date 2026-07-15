@@ -1,6 +1,6 @@
 {
   "name": "kult-oxygen-control-panel",
-  "version": "0.2.24",
+  "version": "0.2.25",
   "description": "Kult Oxygen Control Panel - Advanced Mouse Tuning Utility",
   "main": "main.js",
   "scripts": {

@@ -15,7 +15,7 @@ const RAWACCEL_UNINSTALLER = path.join(RAWACCEL_DIR, 'uninstaller.exe');
 // Map of popular mouse VID/PID
 const MOUSE_DATABASE = {
     // THE G-LAB
-    "30FA:1440": { product_name: "G-LAB Kult Oxygen", max_dpi: 10000, button_count: 7, has_rgb: true },
+    "30FA:1440": { product_name: "G-LAB Kult Oxygen", max_dpi: 12800, button_count: 7, has_rgb: true },
     "30FA:1301": { product_name: "G-LAB Kult Nitrogen Core", max_dpi: 10000, button_count: 11, has_rgb: true },
     "30FA:1302": { product_name: "G-LAB Kult Radium", max_dpi: 4800, button_count: 7, has_rgb: true },
     "30FA:1303": { product_name: "G-LAB Kult Helium", max_dpi: 3200, button_count: 6, has_rgb: true },

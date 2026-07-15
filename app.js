@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.24";
+        const localVersion = "0.2.25";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -559,7 +559,7 @@ function hexToRgb(hex) {
 
 const COMPATIBLE_MICE = [
     // THE G-LAB
-    { id: "30FA:1440", vendorId: 0x30fa, productId: 0x1440, name: "G-LAB Kult Oxygen", brand: "THE G-LAB", maxDpi: 10000, buttonCount: 7, hasRgb: true, color: "#00d2ff", glow: "rgba(0, 210, 255, 0.15)" },
+    { id: "30FA:1440", vendorId: 0x30fa, productId: 0x1440, name: "G-LAB Kult Oxygen", brand: "THE G-LAB", maxDpi: 12800, buttonCount: 7, hasRgb: true, color: "#00d2ff", glow: "rgba(0, 210, 255, 0.15)" },
     { id: "30FA:1301", vendorId: 0x30fa, productId: 0x1301, name: "G-LAB Kult Nitrogen Core", brand: "THE G-LAB", maxDpi: 10000, buttonCount: 11, hasRgb: true, color: "#ff4757", glow: "rgba(255, 71, 87, 0.15)" },
     { id: "30FA:1302", vendorId: 0x30fa, productId: 0x1302, name: "G-LAB Kult Radium", brand: "THE G-LAB", maxDpi: 4800, buttonCount: 7, hasRgb: true, color: "#2ed573", glow: "rgba(46, 213, 115, 0.15)" },
     { id: "30FA:1303", vendorId: 0x30fa, productId: 0x1303, name: "G-LAB Kult Helium", brand: "THE G-LAB", maxDpi: 3200, buttonCount: 6, hasRgb: true, color: "#ffa502", glow: "rgba(255, 165, 2, 0.15)" },
@@ -1174,7 +1174,9 @@ async function sendGlabActiveDpi() {
         const i = mouseSettings.activeDpi;
         const profile = mouseSettings.dpiProfiles[i];
         const profileBits = 0x08 + i;
-        const dataVal = (profile.value << 4) | profileBits;
+        // Cap the physical DPI sent to the hardware to 4800 DPI (step 24) to prevent byte overflow and firmware issues.
+        const hardwareVal = Math.min(profile.value, 24);
+        const dataVal = (hardwareVal << 4) | profileBits;
         let enabledDpiBit = 0;
         for (let j = 0; j < 4; j++) {
             if (mouseSettings.dpiProfiles[j].enabled) enabledDpiBit |= (1 << j);
@@ -1227,7 +1229,9 @@ async function saveMouseSettingsToDevice() {
         for (let i = 0; i < 4; i++) {
             const profile = mouseSettings.dpiProfiles[i];
             const profileBits = 0x08 + i;
-            const dataVal = (profile.value << 4) | profileBits;
+            // Cap the physical DPI sent to the hardware to 4800 DPI (step 24) to prevent byte overflow and firmware issues.
+            const hardwareVal = Math.min(profile.value, 24);
+            const dataVal = (hardwareVal << 4) | profileBits;
             await sendMouseReport(0x09, mouseSettings.activeDpi, dataVal, enabledDpiBit);
             await new Promise(r => setTimeout(r, 15));
         }
@@ -1788,7 +1792,12 @@ async function saveRawaccelSettingsToServer() {
         nameUpper.includes("ATK") || nameUpper.includes("VXE")
     );
     if (isHardwareConfigurable) {
-        rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = activeDpiVal;
+        // If it's a G-LAB mouse, the physical sensor maxes out at 4800 DPI (step 24).
+        // Any requested DPI above 4800 is scaled using RawAccel's output multiplier.
+        const isGlab = nameUpper.includes("G-LAB") || nameUpper.includes("KULT");
+        const physicalActiveDpi = isGlab ? Math.min(activeDpiVal, 4800) : activeDpiVal;
+        
+        rawaccelSettings.defaultDeviceConfig["DPI (normalizes input speed unit: counts/ms -> in/s)"] = physicalActiveDpi;
     }
 
     profile["Output DPI"] = Math.round(activeDpiVal * extraMultiplier);
