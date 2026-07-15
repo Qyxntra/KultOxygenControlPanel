@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.31";
+        const localVersion = "0.2.32";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -807,11 +807,21 @@ function handleInputReport(e) {
     const payload = new Uint8Array(data.buffer);
     console.log(`[WebHID Input Report] ID: ${reportId}, Bytes:`, Array.from(payload));
     
-    // Check for G-LAB / Instant A704 DPI state change packet
-    // Report ID 0x07 is used for active config transmissions. When hardware button changes DPI,
-    // the mouse sends an input report with payload[0] = 0x09 (DPI update notification)
-    if (reportId === 0x07 && payload.length >= 2 && payload[0] === 0x09) {
-        const activeProfileIdx = payload[1] & 0x03; // Limit to 0-3
+    let activeProfileIdx = -1;
+    
+    // Case 1: Report ID 0x06 (sent by the custom keyboard/multimedia interface on button click)
+    if (reportId === 0x06 && payload.length >= 2) {
+        const dpiVal = payload[1];
+        if (dpiVal !== 0x80) { // 0x80 means button released / idle
+            activeProfileIdx = dpiVal & 0x03; // Limit to 0-3
+        }
+    }
+    // Case 2: Report ID 0x07 (sent by the config interface on DPI step change)
+    else if (reportId === 0x07 && payload.length >= 2 && payload[0] === 0x09) {
+        activeProfileIdx = payload[1] & 0x03; // Limit to 0-3
+    }
+    
+    if (activeProfileIdx >= 0 && activeProfileIdx <= 3) {
         console.log(`[WebHID] Physical DPI Button Press detected! Syncing to active profile index: ${activeProfileIdx}`);
         
         // Find the radio button corresponding to this profile index and check it
@@ -825,7 +835,7 @@ function handleInputReport(e) {
     }
 }
 
-function onDeviceConnected(device) {
+async function onDeviceConnected(device) {
     deviceStatus.className = 'status-badge connected';
     deviceStatus.querySelector('.status-dot').style.background = 'var(--color-success)';
     statusText.textContent = `${(device.productName || "G-LAB KULT OXYGEN").toUpperCase()} CONNECTÉ`;
@@ -863,18 +873,48 @@ function onDeviceConnected(device) {
     
     adaptToDevice(device);
     
-    // Listen to live input reports from the physical mouse
-    device.addEventListener('inputreport', handleInputReport);
+    // Listen to live input reports from ALL paired interfaces of this physical mouse
+    try {
+        const allDevices = await navigator.hid.getDevices();
+        for (const dev of allDevices) {
+            if (dev.vendorId === device.vendorId && dev.productId === device.productId) {
+                if (!dev.opened) {
+                    try {
+                        await dev.open();
+                        console.log(`Opened interface for live inputs: ${dev.productName}`);
+                    } catch (errOpen) {
+                        console.warn(`Skipped opening HID interface:`, errOpen);
+                    }
+                }
+                if (dev.opened) {
+                    dev.addEventListener('inputreport', handleInputReport);
+                }
+            }
+        }
+    } catch (errHID) {
+        console.error("Error setting up multi-interface input report listeners:", errHID);
+        // Fallback: listen on the current configuration device interface
+        device.addEventListener('inputreport', handleInputReport);
+    }
     
     const previewCard = document.getElementById('mouse-preview-card');
     if (previewCard) previewCard.classList.add('device-connected');
 }
 
-function onDeviceDisconnected() {
-    if (hidDevice) {
-        try {
-            hidDevice.removeEventListener('inputreport', handleInputReport);
-        } catch (e) {}
+async function onDeviceDisconnected() {
+    try {
+        const allDevices = await navigator.hid.getDevices();
+        for (const dev of allDevices) {
+            try {
+                dev.removeEventListener('inputreport', handleInputReport);
+            } catch (e1) {}
+        }
+    } catch (errHID) {
+        if (hidDevice) {
+            try {
+                hidDevice.removeEventListener('inputreport', handleInputReport);
+            } catch (e2) {}
+        }
     }
     hidDevice = null;
     deviceStatus.className = 'status-badge disconnected';
@@ -946,8 +986,12 @@ navigator.hid.addEventListener('connect', async (e) => {
 const CALIBRATION_DATA = [
     { dpi: 400, pxCm: "~157 px/cm", dist: "12,2 cm", usage: "Bureautique précis / FPS low-sens" },
     { dpi: 800, pxCm: "~315 px/cm", dist: "6,1 cm (Précis)", usage: "Standard FPS, Bureautique" },
+    { dpi: 1200, pxCm: "~472 px/cm", dist: "4,0 cm", usage: "Bureautique large / FPS intermédiaire" },
     { dpi: 1600, pxCm: "~630 px/cm", dist: "3,0 cm (Rapide)", usage: "Le \"sweet spot\" (équilibre idéal)" },
+    { dpi: 2000, pxCm: "~787 px/cm", dist: "2,4 cm", usage: "Écrans 1440p / FPS rapide" },
+    { dpi: 2400, pxCm: "~945 px/cm", dist: "2,0 cm", usage: "RTS, Bureautique rapide" },
     { dpi: 3200, pxCm: "~1 260 px/cm", dist: "1,5 cm (Très rapide)", usage: "Écrans 4K ou Multi-écrans" },
+    { dpi: 4000, pxCm: "~1 575 px/cm", dist: "1,2 cm", usage: "Sensibilité très rapide" },
     { dpi: 4800, pxCm: "~1 890 px/cm", dist: "1,0 cm", usage: "Utilisateurs très vifs / Haute résolution" },
     { dpi: 6400, pxCm: "~2 520 px/cm", dist: "0,7 cm", usage: "Très rare en jeu (souvent trop sensible)" },
     { dpi: 8000, pxCm: "~3 150 px/cm", dist: "0,6 cm", usage: "Sensibilité extrême" },
@@ -961,12 +1005,33 @@ function updateCalibrationTableHighlight(activeDpiVal) {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    CALIBRATION_DATA.forEach(row => {
+    // Copy the static calibration data
+    let list = [...CALIBRATION_DATA];
+    
+    // Check if the current active DPI is already in the list
+    const exists = list.some(row => Math.abs(row.dpi - activeDpiVal) < 50);
+    if (!exists && activeDpiVal >= 200 && activeDpiVal <= 12800) {
+        // Calculate px/cm and distance dynamically for custom values
+        const pxCmVal = Math.round(activeDpiVal / 2.54);
+        const distVal = (1920 / (activeDpiVal / 2.54)).toFixed(1);
+        list.push({
+            dpi: activeDpiVal,
+            pxCm: `~${pxCmVal} px/cm`,
+            dist: `${distVal} cm`,
+            usage: "Valeur de sensibilité active",
+            isCustom: true
+        });
+    }
+    
+    // Sort all rows by DPI ascending
+    list.sort((a, b) => a.dpi - b.dpi);
+    
+    list.forEach(row => {
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid var(--border-color)';
         tr.style.transition = 'all 0.2s';
         
-        const isCurrent = Math.abs(row.dpi - activeDpiVal) < 200;
+        const isCurrent = Math.abs(row.dpi - activeDpiVal) < 50;
         if (isCurrent) {
             tr.style.background = 'rgba(var(--color-primary-rgb), 0.12)';
             tr.style.fontWeight = 'bold';
