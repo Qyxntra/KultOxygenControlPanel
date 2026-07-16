@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.37";
+        const localVersion = "0.2.38";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -343,9 +343,13 @@ function rebuildButtonMappingUI(count) {
         });
         
         // Add events directly to the newly created element
-        select.addEventListener('change', (e) => {
+        select.addEventListener('change', async (e) => {
             if (mouseSettings.buttons[i]) {
                 mouseSettings.buttons[i].action = parseInt(e.target.value);
+                if (typeof updateDashboardDpiShortcuts === 'function') {
+                    updateDashboardDpiShortcuts();
+                }
+                await saveMouseSettingsToDevice();
             }
         });
         
@@ -810,15 +814,21 @@ function handleInputReport(e) {
     let activeProfileIdx = -1;
     
     // Case 1: Report ID 0x06 (sent by the custom keyboard/multimedia interface on button click)
-    if (reportId === 0x06 && payload.length >= 2) {
-        const dpiVal = payload[1];
+    // WebHID strips the reportId byte, leaving a payload length of 1 on Windows
+    if (reportId === 0x06 && payload.length >= 1) {
+        const dpiVal = payload[0];
         if (dpiVal !== 0x80) { // 0x80 means button released / idle
             activeProfileIdx = dpiVal & 0x03; // Limit to 0-3
         }
     }
     // Case 2: Report ID 0x07 (sent by the config interface on DPI step change)
+    // Payload contains [0x09, activeDpi] (excluding the reportId)
     else if (reportId === 0x07 && payload.length >= 2 && payload[0] === 0x09) {
         activeProfileIdx = payload[1] & 0x03; // Limit to 0-3
+    }
+    // Safety check for single-byte 0x07 report
+    else if (reportId === 0x07 && payload.length === 1) {
+        activeProfileIdx = payload[0] & 0x03;
     }
     
     if (activeProfileIdx >= 0 && activeProfileIdx <= 3) {
@@ -1877,6 +1887,28 @@ function populateRawaccelUI(settings) {
         document.getElementById('param-lut-points').value = pointsText;
     } else {
         document.getElementById('param-lut-points').value = "0.0, 1.0\n10.0, 1.25\n20.0, 1.50\n30.0, 1.80";
+    }
+    
+    // Sync Degrees of angle snapping from RawAccel to Sensor Filters UI
+    const snapDeg = profile["Degrees of angle snapping"] || 0;
+    const chkSnap = document.getElementById('angle-snapping');
+    const snapSlider = document.getElementById('snap-threshold');
+    const snapDisplay = document.getElementById('snap-threshold-display');
+    const rowSnap = document.getElementById('row-snap-threshold');
+    
+    if (chkSnap) {
+        chkSnap.checked = snapDeg > 0;
+        if (rowSnap) {
+            rowSnap.style.display = snapDeg > 0 ? 'flex' : 'none';
+        }
+    }
+    if (snapDeg > 0 && snapSlider) {
+        snapSlider.value = snapDeg;
+        if (snapDisplay) snapDisplay.textContent = `${snapDeg}°`;
+    }
+    
+    if (typeof updateFilterBadges === 'function') {
+        updateFilterBadges();
     }
     
     updateRawaccelFields();
@@ -3268,85 +3300,55 @@ if (sensorCanvas) {
             }
         }
         
-        // 2. Angle Snapping
+        // 2. Angle Snapping (Improved smooth pull-based model)
         const angleSnappingEnabled = document.getElementById('angle-snapping').checked;
         if (angleSnappingEnabled && (dx !== 0 || dy !== 0)) {
             const snapModeVal = document.getElementById('snap-mode').value || 'hysteresis';
             const snapAngleVal = parseFloat(document.getElementById('snap-threshold').value) || 3;
             const stiffnessVal = parseInt(document.getElementById('snap-stiffness').value) || 6;
             
-            if (snapModeVal === 'hysteresis') {
-                const thresholdAngle = snapAngleVal * (Math.PI / 180);
-                const breakout = 5 + stiffnessVal * 2;
-                
-                if (!window._snapLockState) {
-                    window._snapLockState = { axis: null, lockedValue: 0 };
-                }
-                
-                if (window._snapLockState.axis === null) {
-                    const angle = Math.abs(Math.atan2(dy, dx));
-                    if (angle < thresholdAngle || angle > Math.PI - thresholdAngle) {
-                        window._snapLockState.axis = 'x';
-                        window._snapLockState.lockedValue = sLastProcY;
-                    } else if (Math.abs(angle - Math.PI / 2) < thresholdAngle) {
-                        window._snapLockState.axis = 'y';
-                        window._snapLockState.lockedValue = sLastProcX;
-                    }
-                }
-                
-                if (window._snapLockState.axis === 'x') {
-                    const deviation = Math.abs(currentRawY - window._snapLockState.lockedValue);
-                    if (deviation > breakout) {
-                        window._snapLockState.axis = null;
-                    } else {
-                        dy = 0;
-                    }
-                } else if (window._snapLockState.axis === 'y') {
-                    const deviation = Math.abs(currentRawX - window._snapLockState.lockedValue);
-                    if (deviation > breakout) {
-                        window._snapLockState.axis = null;
-                    } else {
-                        dx = 0;
-                    }
-                }
-            } else if (snapModeVal === 'strict') {
-                if (!window._snapStrictState) {
-                    window._snapStrictState = { axis: null };
-                }
-                if (window._snapStrictState.axis === null) {
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                        window._snapStrictState.axis = 'x';
-                    } else if (Math.abs(dy) > Math.abs(dx)) {
-                        window._snapStrictState.axis = 'y';
-                    }
-                }
-                
-                const breakout = 18 - stiffnessVal * 1.2;
-                if (window._snapStrictState.axis === 'x') {
-                    if (Math.abs(dy) > breakout) {
-                        window._snapStrictState.axis = 'y';
-                        dx = 0;
-                    } else {
-                        dy = 0;
-                    }
-                } else if (window._snapStrictState.axis === 'y') {
-                    if (Math.abs(dx) > breakout) {
-                        window._snapStrictState.axis = 'x';
-                        dy = 0;
-                    } else {
-                        dx = 0;
-                    }
-                }
-            } else if (snapModeVal === 'predictive') {
-                const speed = Math.sqrt(dx * dx + dy * dy);
+            const speed = Math.sqrt(dx * dx + dy * dy);
+            
+            if (snapModeVal === 'predictive') {
                 if (speed > 0.1) {
                     const currentAngle = Math.atan2(dy, dx);
                     const snapStep = snapAngleVal * (Math.PI / 180);
                     const snappedAngle = Math.round(currentAngle / snapStep) * snapStep;
-                    const blend = stiffnessVal / 10;
+                    const blend = stiffnessVal / 12; // Cap at 1.0 (12/12)
                     const finalAngle = currentAngle * (1 - blend) + snappedAngle * blend;
                     dx = Math.cos(finalAngle) * speed;
                     dy = Math.sin(finalAngle) * speed;
+                }
+            } else {
+                // Hysteresis & Strict axis locking with smooth blending
+                if (speed > 0.1) {
+                    const currentAngle = Math.atan2(dy, dx);
+                    const snapThresholdRad = snapAngleVal * (Math.PI / 180);
+                    
+                    // Find nearest cardinal direction (0, 90, 180, 270 degrees)
+                    const cardinals = [0, Math.PI / 2, Math.PI, -Math.PI / 2, -Math.PI];
+                    let minDiff = Infinity;
+                    let targetCardinal = 0;
+                    
+                    cardinals.forEach(card => {
+                        const diff = Math.abs(currentAngle - card);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            targetCardinal = card;
+                        }
+                    });
+                    
+                    if (minDiff < snapThresholdRad) {
+                        // Smooth pulling factor: pulls harder the closer we are to the axis
+                        // Stiffness controls the maximum pull strength
+                        const normalizedDist = minDiff / snapThresholdRad;
+                        const maxPull = stiffnessVal / 12;
+                        const pullFactor = (1 - normalizedDist) * maxPull;
+                        
+                        const finalAngle = currentAngle * (1 - pullFactor) + targetCardinal * pullFactor;
+                        dx = Math.cos(finalAngle) * speed;
+                        dy = Math.sin(finalAngle) * speed;
+                    }
                 }
             }
         } else {
@@ -3455,8 +3457,10 @@ if (sidebarSearch) {
 // Customizer Theme Logic
 const pickerPrimary = document.getElementById('color-picker-primary');
 const pickerSecondary = document.getElementById('color-picker-secondary');
+const pickerBg = document.getElementById('color-picker-bg');
 const textPrimary = document.getElementById('hex-primary');
 const textSecondary = document.getElementById('hex-secondary');
+const textBg = document.getElementById('hex-bg');
 
 const sliderBorder = document.getElementById('slider-border-radius');
 const labelBorder = document.getElementById('display-border-radius');
@@ -3466,6 +3470,18 @@ const sliderUiScale = document.getElementById('slider-ui-scale');
 const labelUiScale = document.getElementById('display-ui-scale');
 
 const presetBtns = document.querySelectorAll('.preset-btn');
+
+function hexToRgb(hex) {
+    if (!hex) return null;
+    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    const cleanHex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(cleanHex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
 
 function saveThemeSettings(theme) {
     localStorage.setItem('GLAB_THEME_CUSTOM', JSON.stringify(theme));
@@ -3486,6 +3502,10 @@ function loadThemeSettings() {
                 pickerSecondary.value = theme.secondary;
                 textSecondary.textContent = theme.secondary;
             }
+            if (theme.bg && pickerBg) {
+                pickerBg.value = theme.bg;
+                textBg.textContent = theme.bg;
+            }
             if (theme.borderRadius !== undefined && sliderBorder) {
                 sliderBorder.value = theme.borderRadius;
                 labelBorder.textContent = theme.borderRadius + " px";
@@ -3503,7 +3523,8 @@ function loadThemeSettings() {
             presetBtns.forEach(btn => {
                 const pri = btn.dataset.primary;
                 const sec = btn.dataset.secondary;
-                if (pri === theme.primary && sec === theme.secondary) {
+                const bgVal = btn.dataset.bg;
+                if (pri === theme.primary && sec === theme.secondary && (!bgVal || bgVal === theme.bg)) {
                     btn.classList.add('active');
                 } else {
                     btn.classList.remove('active');
@@ -3518,9 +3539,27 @@ function loadThemeSettings() {
 function applyTheme(theme) {
     if (theme.primary) {
         document.documentElement.style.setProperty('--color-primary', theme.primary);
+        const rgb = hexToRgb(theme.primary);
+        if (rgb) {
+            document.documentElement.style.setProperty('--color-primary-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+        }
     }
     if (theme.secondary) {
         document.documentElement.style.setProperty('--color-secondary', theme.secondary);
+    }
+    if (theme.bg) {
+        document.documentElement.style.setProperty('--bg-app', theme.bg);
+        // Also update card and input background shades based on selected background shade
+        const rgb = hexToRgb(theme.bg);
+        if (rgb) {
+            const cardBg = `rgba(${Math.max(0, rgb.r + 4)}, ${Math.max(0, rgb.g + 5)}, ${Math.max(0, rgb.b + 8)}, var(--bg-opacity-custom))`;
+            const sidebarBg = `rgba(${Math.max(0, rgb.r + 3)}, ${Math.max(0, rgb.g + 3)}, ${Math.max(0, rgb.b + 6)}, 0.85)`;
+            const inputBg = `rgb(${Math.max(0, rgb.r + 10)}, ${Math.max(0, rgb.g + 11)}, ${Math.max(0, rgb.b + 17)})`;
+            
+            document.documentElement.style.setProperty('--bg-card', cardBg);
+            document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+            document.documentElement.style.setProperty('--bg-input', inputBg);
+        }
     }
     if (theme.borderRadius !== undefined) {
         document.documentElement.style.setProperty('--border-radius-custom', theme.borderRadius + "px");
@@ -3537,6 +3576,7 @@ function updateAndSaveTheme() {
     const theme = {
         primary: pickerPrimary ? pickerPrimary.value : "#0df5d3",
         secondary: pickerSecondary ? pickerSecondary.value : "#a78bfa",
+        bg: pickerBg ? pickerBg.value : "#06070a",
         borderRadius: sliderBorder ? parseInt(sliderBorder.value) : 12,
         transparency: sliderTransparency ? parseInt(sliderTransparency.value) : 45,
         uiScale: sliderUiScale ? parseInt(sliderUiScale.value) : 100
@@ -3554,6 +3594,12 @@ if (pickerPrimary) {
 if (pickerSecondary) {
     pickerSecondary.addEventListener('input', (e) => {
         textSecondary.textContent = e.target.value;
+        updateAndSaveTheme();
+    });
+}
+if (pickerBg) {
+    pickerBg.addEventListener('input', (e) => {
+        textBg.textContent = e.target.value;
         updateAndSaveTheme();
     });
 }
@@ -3582,10 +3628,16 @@ presetBtns.forEach(btn => {
         btn.classList.add('active');
         const pri = btn.dataset.primary;
         const sec = btn.dataset.secondary;
+        const bgVal = btn.dataset.bg || "#06070a";
+        
         if (pickerPrimary) pickerPrimary.value = pri;
         if (pickerSecondary) pickerSecondary.value = sec;
+        if (pickerBg) pickerBg.value = bgVal;
+        
         if (textPrimary) textPrimary.textContent = pri;
         if (textSecondary) textSecondary.textContent = sec;
+        if (textBg) textBg.textContent = bgVal;
+        
         updateAndSaveTheme();
     });
 });
@@ -3996,6 +4048,27 @@ function saveSensorFiltersToStorage() {
         deadzoneDynamicFilter: document.getElementById('deadzone-dynamic-filter').checked
     };
     localStorage.setItem('GLAB_SENSOR_FILTERS', JSON.stringify(filters));
+    
+    // Toggle active badges in UI
+    if (typeof updateFilterBadges === 'function') {
+        updateFilterBadges();
+    }
+    
+    // Auto-apply Angle Snapping degrees to RawAccel settings.json instantly
+    if (rawaccelSettings && rawaccelSettings.profiles && rawaccelSettings.profiles[0]) {
+        const profile = rawaccelSettings.profiles[0];
+        const snapDegrees = filters.angleSnapping ? filters.snapThreshold : 0;
+        
+        // Write to horizontal and vertical profiles
+        profile["Degrees of angle snapping"] = snapDegrees;
+        if (profile["Vertical accel parameters"]) {
+            profile["Vertical accel parameters"]["Degrees of angle snapping"] = snapDegrees;
+        }
+        
+        // Quietly write to driver settings to keep real-time response fast
+        invokeIPC('write_rawaccel_settings', { settings: rawaccelSettings })
+            .catch(err => console.error("Auto-apply Angle Snapping to Raw Accel failed:", err));
+    }
 }
 
 function loadSensorFiltersFromStorage() {

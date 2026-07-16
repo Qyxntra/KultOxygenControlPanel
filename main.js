@@ -223,8 +223,50 @@ function configureStartup() {
     }
 }
 
+// Single Instance Lock: Terminate existing instance if found
+const lockFilePath = path.join(app.getPath('userData'), 'app.pid');
+function enforceSingleInstance() {
+    try {
+        if (fs.existsSync(lockFilePath)) {
+            const oldPid = parseInt(fs.readFileSync(lockFilePath, 'utf-8'));
+            if (oldPid && oldPid !== process.pid) {
+                try {
+                    // Send SIGTERM to old process
+                    process.kill(oldPid, 'SIGTERM');
+                    console.log(`Sent SIGTERM to old process instance: ${oldPid}`);
+                    
+                    // Wait synchronously for up to 500ms for it to exit
+                    let checkCount = 0;
+                    while (checkCount < 10) {
+                        try {
+                            process.kill(oldPid, 0); // Test if process is still alive
+                            const start = Date.now();
+                            while (Date.now() - start < 50) {} // Sleep 50ms
+                        } catch (e) {
+                            // Process is dead
+                            break;
+                        }
+                        checkCount++;
+                    }
+                    if (checkCount === 10) {
+                        // Force kill if it's still alive after 500ms
+                        try { process.kill(oldPid, 'SIGKILL'); } catch (e) {}
+                    }
+                } catch (e) {
+                    // Process not found or access denied
+                }
+            }
+        }
+        // Write our own PID to lockfile
+        fs.writeFileSync(lockFilePath, process.pid.toString(), 'utf-8');
+    } catch (err) {
+        console.error("Single instance check error:", err);
+    }
+}
+
 // Init App
 app.whenReady().then(() => {
+    enforceSingleInstance();
     initRawaccelDirectory();
     createWindow();
     createTray();

@@ -326,8 +326,20 @@
                             <div class="changelog-container" style="max-height: 250px; overflow-y: auto; padding-right: 8px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.37 (Actuelle)</strong>
+                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.38 (Actuelle)</strong>
                                         <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Aujourd'hui</span>
+                                    </div>
+                                    <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
+                                        <li><strong>Instance Unique & Remplacement PID</strong> : L'application n'autorise plus qu'une seule instance ouverte simultanément. Toute nouvelle tentative de démarrage ferme proprement la précédente.</li>
+                                        <li><strong>Sélecteur de Nuances & Thèmes Étendus</strong> : Ajout d'un sélecteur de nuances de fond personnalisé pour modifier la couleur principale de l'interface en direct, ainsi que de nouveaux thèmes prédéfinis.</li>
+                                        <li><strong>Angle Snapping Direct & Automatique</strong> : Synchronisation immédiate de l'Angle Snapping avec le pilote de noyau Raw Accel lors de chaque modification, et rechargement automatique au démarrage.</li>
+                                        <li><strong>Correction Raccourcis & Boutons Physiques</strong> : Ajustement du décodage du rapport USB WebHID pour le bouton physique DPI de la souris.</li>
+                                    </ul>
+                                </div>
+                                <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <strong style="color: var(--text-primary); font-size: 0.85rem;">Version 0.2.37</strong>
+                                        <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Hier</span>
                                     </div>
                                     <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
                                         <li><strong>Stabilité des Index DPI Identiques</strong> : Suivi rigoureux de l'identité des profils par référence d'objet (object reference) au lieu de leur valeur numérique brute lors du tri. Cela empêche le profil actif de sauter vers une autre ligne s'il existe plusieurs profils à 1600 DPI.</li>
@@ -370,14 +382,16 @@
                         <!-- Left Column: Theme Engine -->
                         <div class="card col-left">
                             <h3 class="card-title">Palette de Couleurs</h3>
-                            <div class="theme-presets-grid">
-                                <button class="preset-btn active" data-primary="#0df5d3" data-secondary="#a78bfa" style="background: linear-gradient(135deg, #0df5d3, #a78bfa);"></button>
-                                <button class="preset-btn" data-primary="#00d2ff" data-secondary="#00a2ff" style="background: linear-gradient(135deg, #00d2ff, #00a2ff);"></button>
-                                <button class="preset-btn" data-primary="#a855f7" data-secondary="#ec4899" style="background: linear-gradient(135deg, #a855f7, #ec4899);"></button>
-                                <button class="preset-btn" data-primary="#10b981" data-secondary="#059669" style="background: linear-gradient(135deg, #10b981, #059669);"></button>
+                            <div class="theme-presets-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                <button class="preset-btn active" data-primary="#0df5d3" data-secondary="#a78bfa" data-bg="#06070a" style="background: linear-gradient(135deg, #0df5d3, #a78bfa); min-height: 38px; border-radius: 8px; cursor: pointer;" title="Mint Lavender (Default)"></button>
+                                <button class="preset-btn" data-primary="#ff5e62" data-secondary="#ff9966" data-bg="#0c0608" style="background: linear-gradient(135deg, #ff5e62, #ff9966); min-height: 38px; border-radius: 8px; cursor: pointer;" title="Cyber Sunset"></button>
+                                <button class="preset-btn" data-primary="#00f2fe" data-secondary="#4facfe" data-bg="#040a15" style="background: linear-gradient(135deg, #00f2fe, #4facfe); min-height: 38px; border-radius: 8px; cursor: pointer;" title="Deep Ice Blue"></button>
+                                <button class="preset-btn" data-primary="#00ff87" data-secondary="#60efff" data-bg="#030d09" style="background: linear-gradient(135deg, #00ff87, #60efff); min-height: 38px; border-radius: 8px; cursor: pointer;" title="Emerald Forest"></button>
+                                <button class="preset-btn" data-primary="#ffbf00" data-secondary="#ff7b00" data-bg="#0f0f10" style="background: linear-gradient(135deg, #ffbf00, #ff7b00); min-height: 38px; border-radius: 8px; cursor: pointer;" title="Obsidian Gold"></button>
+                                <button class="preset-btn" data-primary="#d946ef" data-secondary="#8b5cf6" data-bg="#080310" style="background: linear-gradient(135deg, #d946ef, #8b5cf6); min-height: 38px; border-radius: 8px; cursor: pointer;" title="Royal Amethyst"></button>
                             </div>
                             
-                            <div class="form-grid" style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                            <div class="form-grid" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
                                 <div class="form-group">
                                     <label for="color-picker-primary">Couleur Principale</label>
                                     <div class="color-picker-wrapper">
@@ -390,6 +404,13 @@
                                     <div class="color-picker-wrapper">
                                         <input type="color" id="color-picker-secondary" value="#a78bfa">
                                         <span class="color-hex-val" id="hex-secondary">#a78bfa</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="color-picker-bg">Couleur de Fond (Shades)</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="color-picker-bg" value="#06070a">
+                                        <span class="color-hex-val" id="hex-bg">#06070a</span>
                                     </div>
                                 </div>
                             </div>
