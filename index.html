@@ -326,7 +326,17 @@
                             <div class="changelog-container" style="max-height: 250px; overflow-y: auto; padding-right: 8px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
                                 <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.38 (Actuelle)</strong>
+                                        <strong style="color: var(--color-primary); font-size: 0.85rem;">Version 0.2.39 (Actuelle)</strong>
+                                        <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Aujourd'hui</span>
+                                    </div>
+                                    <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
+                                        <li><strong>Bascule DPI Unique (DPI Cycle)</strong> : Remplacement des raccourcis séparés DPI +/- par une bascule de cycle unique permettant de boucler de la valeur maximale à la valeur minimale avec un seul bouton.</li>
+                                        <li><strong>Indicateurs Dynamiques de Couleur DPI</strong> : La valeur de DPI active affichée sur le tableau de bord change dynamiquement de couleur pour correspondre au code couleur précis du profil sélectionné.</li>
+                                    </ul>
+                                </div>
+                                <div class="changelog-item" style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <strong style="color: var(--text-primary); font-size: 0.85rem;">Version 0.2.38</strong>
                                         <span class="mono" style="font-size: 0.7rem; opacity: 0.6;">Aujourd'hui</span>
                                     </div>
                                     <ul style="margin: 0; padding-left: 18px; list-style-type: square; color: var(--text-secondary);">
@@ -552,15 +562,11 @@
                                 
                                 <!-- Physical Button Shortcuts -->
                                 <div class="dpi-shortcuts-section" style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 18px;">
-                                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Raccourcis Boutons Physiques</div>
+                                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Raccourci Bouton Physique</div>
                                     <div style="display: flex; gap: 10px;">
                                         <div style="flex: 1;">
-                                            <label for="shortcut-dpi-plus" style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">BOUTON DPI +</label>
-                                            <select id="shortcut-dpi-plus" class="btn-select" style="width: 100%; font-size: 0.75rem; padding: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;"></select>
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <label for="shortcut-dpi-minus" style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">BOUTON DPI -</label>
-                                            <select id="shortcut-dpi-minus" class="btn-select" style="width: 100%; font-size: 0.75rem; padding: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;"></select>
+                                            <label for="shortcut-dpi-cycle" style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">Bouton de bascule DPI (Cycle)</label>
+                                            <select id="shortcut-dpi-cycle" class="btn-select" style="width: 100%; font-size: 0.75rem; padding: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;"></select>
                                         </div>
                                     </div>
                                 </div>

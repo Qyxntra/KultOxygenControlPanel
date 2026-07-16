@@ -82,7 +82,7 @@ async function invokeIPC(command, args = {}) {
 async function checkElectronUpdate() {
     if (!window.electronAPI) return;
     try {
-        const localVersion = "0.2.38";
+        const localVersion = "0.2.39";
         const res = await fetch('https://raw.githubusercontent.com/Qyxntra/KultOxygenControlPanel/main/latest.json');
         if (!res.ok) return;
         const latest = await res.json();
@@ -1227,25 +1227,16 @@ function updateDpiUI() {
 }
 
 function updateDashboardDpiShortcuts() {
-    const selectPlus = document.getElementById('shortcut-dpi-plus');
-    const selectMinus = document.getElementById('shortcut-dpi-minus');
-    if (!selectPlus || !selectMinus) return;
+    const selectCycle = document.getElementById('shortcut-dpi-cycle');
+    if (!selectCycle) return;
     
-    selectPlus.onchange = null;
-    selectMinus.onchange = null;
+    selectCycle.onchange = null;
+    selectCycle.innerHTML = '';
     
-    selectPlus.innerHTML = '';
-    selectMinus.innerHTML = '';
-    
-    const optNone1 = document.createElement('option');
-    optNone1.value = "-1";
-    optNone1.textContent = "Aucun";
-    selectPlus.appendChild(optNone1);
-    
-    const optNone2 = document.createElement('option');
-    optNone2.value = "-1";
-    optNone2.textContent = "Aucun";
-    selectMinus.appendChild(optNone2);
+    const optNone = document.createElement('option');
+    optNone.value = "-1";
+    optNone.textContent = "Aucun";
+    selectCycle.appendChild(optNone);
     
     const buttonCount = mouseSettings.buttons.length;
     
@@ -1266,51 +1257,40 @@ function updateDashboardDpiShortcuts() {
     for (let i = 0; i < buttonCount; i++) {
         const text = standardLabels[i] || `Bouton ${i + 1}`;
         
-        const optPlus = document.createElement('option');
-        optPlus.value = i.toString();
-        optPlus.textContent = text;
-        selectPlus.appendChild(optPlus);
-        
-        const optMinus = document.createElement('option');
-        optMinus.value = i.toString();
-        optMinus.textContent = text;
-        selectMinus.appendChild(optMinus);
+        const opt = document.createElement('option');
+        opt.value = i.toString();
+        opt.textContent = text;
+        selectCycle.appendChild(opt);
     }
     
-    let activePlusIdx = -1;
-    let activeMinusIdx = -1;
+    let activeCycleIdx = -1;
     for (let i = 0; i < buttonCount; i++) {
-        if (mouseSettings.buttons[i].action === 9) activePlusIdx = i;
-        if (mouseSettings.buttons[i].action === 10) activeMinusIdx = i;
+        if (mouseSettings.buttons[i].action === 5) {
+            activeCycleIdx = i;
+            break;
+        }
     }
     
-    selectPlus.value = activePlusIdx.toString();
-    selectMinus.value = activeMinusIdx.toString();
+    selectCycle.value = activeCycleIdx.toString();
     
-    selectPlus.onchange = async (e) => {
+    selectCycle.onchange = async (e) => {
         const selectedIdx = parseInt(e.target.value);
         for (let i = 0; i < buttonCount; i++) {
-            if (mouseSettings.buttons[i].action === 9) {
-                mouseSettings.buttons[i].action = 5;
+            if (mouseSettings.buttons[i].action === 5) {
+                // Restore defaults
+                let defaultAction = 5;
+                if (i === 0) defaultAction = 0;
+                else if (i === 1) defaultAction = 1;
+                else if (i === 2) defaultAction = 2;
+                else if (i === 3) defaultAction = 4;
+                else if (i === 4) defaultAction = 3;
+                else if (i === 5) defaultAction = 9;
+                else if (i === 6) defaultAction = 10;
+                mouseSettings.buttons[i].action = defaultAction;
             }
         }
         if (selectedIdx >= 0 && mouseSettings.buttons[selectedIdx]) {
-            mouseSettings.buttons[selectedIdx].action = 9;
-        }
-        rebuildButtonMappingUI(buttonCount);
-        updateDashboardDpiShortcuts();
-        await saveMouseSettingsToDevice();
-    };
-    
-    selectMinus.onchange = async (e) => {
-        const selectedIdx = parseInt(e.target.value);
-        for (let i = 0; i < buttonCount; i++) {
-            if (mouseSettings.buttons[i].action === 10) {
-                mouseSettings.buttons[i].action = 5;
-            }
-        }
-        if (selectedIdx >= 0 && mouseSettings.buttons[selectedIdx]) {
-            mouseSettings.buttons[selectedIdx].action = 10;
+            mouseSettings.buttons[selectedIdx].action = 5;
         }
         rebuildButtonMappingUI(buttonCount);
         updateDashboardDpiShortcuts();
@@ -3655,6 +3635,12 @@ function syncDashboardDpi() {
         const activeIdx = mouseSettings.activeDpi;
         const activeVal = mouseSettings.dpiProfiles[activeIdx].value * 200;
         dashDpi.textContent = activeVal;
+        
+        // Match standard profile colors in UI: Blue, Orange, Green, Purple
+        const profileColors = ['#0088ff', '#ffaa00', '#00ff66', '#ff00ff'];
+        const activeColor = profileColors[activeIdx] || 'var(--color-primary)';
+        dashDpi.style.color = activeColor;
+        dashDpi.style.textShadow = `0 0 15px ${activeColor}66`;
         
         const profileSelect = document.getElementById('profile-select-dropdown');
         dashProfile.textContent = profileSelect ? profileSelect.options[profileSelect.selectedIndex].text : "Profil par défaut";
